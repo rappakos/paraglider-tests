@@ -11,9 +11,17 @@
 
     <table class="w3-table w3-bordered">
         <tr>
-            <th>Test date</th>
+            <th>Report date</th>
+            <th>Item name</th>
+            <th>Class</th>
         </tr>
-
+        {% for report in reports %}
+        <tr>
+            <td>{{report.report_date}}</td>
+            <td>{{report.item_name}}</td>
+            <td>{{report.report_class}}</td>
+        </tr>
+        {% endfor %}
     </table>
 
 {% endblock %}
