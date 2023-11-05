@@ -11,6 +11,8 @@ ORGS = {
     'dhv': {'name': 'DHV'}
 }
 
+DOWNLOAD_FOLDER = 'data/pdf'
+
 def redirect(router, route_name, org = None):
     location = router[route_name].url_for(org=org)
     return web.HTTPFound(location)
@@ -21,6 +23,8 @@ async def index(request):
 
 @aiohttp_jinja2.template('reports.html')
 async def reports(request):
+    from os.path import exists
+
     org = request.match_info.get('org', None)
     if org in ORGS:
         #for classification in ['B','C']:
@@ -28,6 +32,9 @@ async def reports(request):
         #    print(classification,start_date)
         reports = await db.get_reports(org)
         #print(reports.head())
+
+        reports['pdf_available'] = reports.apply(lambda row: exists(f"{DOWNLOAD_FOLDER}/{'_'.join(row.item_name.split())}.pdf") , axis=1)
+
 
         return {
             'org': org,

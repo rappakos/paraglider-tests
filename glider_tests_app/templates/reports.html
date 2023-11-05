@@ -11,7 +11,7 @@
     </form>
 
     <form action="/{{org}}/details" method="post" class="w3-container w3-quarter" autocomplete="off">
-        <input type="submit" value="Get details link" class="w3-button"  />
+        <input type="submit" value="Get download links" class="w3-button"  />
     </form>
 </div>
 
@@ -20,7 +20,8 @@
             <th>Report date</th>
             <th>Item name</th>
             <th>Class</th>
-            <th>Downloaded</th>
+            <th>Download link</th>
+            <th>PDF?</th>
         </tr>
         {% for report in reports %}
         <tr>
@@ -28,6 +29,7 @@
             <td>{{report.item_name}}</td>
             <td>{{report.report_class}}</td>
             <td>{{'-' if report.download_link is none else 'ok'}}</td>
+            <td>{{report.pdf_available}}</td>
         </tr>
         {% endfor %}
     </table>
