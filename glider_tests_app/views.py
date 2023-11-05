@@ -33,7 +33,8 @@ async def reports(request):
         reports = await db.get_reports(org)
         #print(reports.head())
 
-        reports['pdf_available'] = reports.apply(lambda row: exists(f"{DOWNLOAD_FOLDER}/{'_'.join(row.item_name.split())}.pdf") , axis=1)
+        if not reports.empty:
+            reports['pdf_available'] = reports.apply(lambda row: exists(f"{DOWNLOAD_FOLDER}/{'_'.join(row.item_name.split())}.pdf") , axis=1)
 
 
         return {
@@ -80,3 +81,25 @@ async def load_details(request):
     else:
         raise NotImplementedError("invalid?")            
     
+async def load_pdf(request):
+    import requests
+    from os.path import exists
+
+    org = request.match_info.get('org', None)    
+    if request.method == 'POST':
+        if org=='air-turquoise':
+            file_checks =  await db.get_download_links(org)
+            for item in file_checks.itertuples(index=None):
+                #print(item.item_name, item.download_link)
+                fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
+                if exists(fname):
+                    print(f'{fname} - ok')
+                else:
+                    url = f"{airturquoise_loader.AIR_TURQUISE_BASE_URL}{item.download_link}"
+                    print(f'downloading {fname} from {url}')
+                    r = requests.get(url, allow_redirects=True)
+                    open(fname, 'wb').write(r.content)
+
+        raise redirect(request.app.router, 'reports', org=org)
+    else:
+        raise NotImplementedError("invalid?")                     

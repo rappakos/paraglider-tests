@@ -13,6 +13,10 @@
     <form action="/{{org}}/details" method="post" class="w3-container w3-quarter" autocomplete="off">
         <input type="submit" value="Get download links" class="w3-button"  />
     </form>
+
+    <form action="/{{org}}/load-pdf" method="post" class="w3-container w3-quarter" autocomplete="off">
+        <input type="submit" value="Get PDF files" class="w3-button"  />
+    </form>    
 </div>
 
     <table class="w3-table w3-bordered">
@@ -29,6 +33,7 @@
             <td>{{report.item_name}}</td>
             <td>{{report.report_class}}</td>
             <td>{{'-' if report.download_link is none else 'ok'}}</td>
+            <!-- <td>{{report.download_link}}</td> -->
             <td>{{report.pdf_available}}</td>
         </tr>
         {% endfor %}

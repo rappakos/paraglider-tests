@@ -69,7 +69,7 @@ async def get_reports(org:str):
                         SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
                         FROM air_turquoise_reports r  
                         ORDER BY [report_date] DESC
-                        LIMIT 100
+                        LIMIT 500
                     """), db, params=param)
         return df
 
@@ -105,6 +105,23 @@ async def get_open_reports(org:str):
                         LIMIT 20 -- test
                     """), db, params=param)
         return df 
+
+async def get_download_links(org:str):
+        import pandas as pd
+        if org != 'air-turquoise':
+            return pd.DataFrame()
+
+        engine = create_engine(f'sqlite:///{DB_NAME}')
+        with engine.connect() as db:
+            param = {}
+            df  = pd.read_sql_query(text(f"""
+                        SELECT r.[item_name], r.[download_link]
+                        FROM air_turquoise_reports r 
+                        WHERE r.[download_link] is not null 
+                        ORDER BY r.[report_date] DESC
+                        LIMIT 100 -- test
+                    """), db, params=param)
+        return df      
 
 async def save_download_link(report_link, download_link):
     async with aiosqlite.connect(DB_NAME) as db:
