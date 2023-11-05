@@ -5,9 +5,15 @@
 
 {% block content %}
 
-<form action="/{{org}}" method="post" class="w3-container" autocomplete="off">
-    <input type="submit" value="Refresh test list" class="w3-button"  />
-</form>
+<div class="w3-row w3-half">
+    <form action="/{{org}}" method="post" class="w3-container w3-quarter" autocomplete="off" >
+        <input type="submit" value="Refresh test list" class="w3-button"  />
+    </form>
+
+    <form action="/{{org}}/details" method="post" class="w3-container w3-quarter" autocomplete="off">
+        <input type="submit" value="Get details link" class="w3-button"  />
+    </form>
+</div>
 
     <table class="w3-table w3-bordered">
         <tr>
@@ -21,7 +27,7 @@
             <td>{{report.report_date}}</td>
             <td>{{report.item_name}}</td>
             <td>{{report.report_class}}</td>
-            <td>{{report.download_link}}</td>
+            <td>{{'-' if report.download_link is none else 'ok'}}</td>
         </tr>
         {% endfor %}
     </table>

@@ -52,3 +52,36 @@ async def get_table_data(classification, index):
         print(err)
 
     return pd.DataFrame(data, columns=['report_date','item_name','report_link','report_class'])
+
+async def get_download_link(link:str):
+    url = f"{AIR_TURQUISE_BASE_URL}{link}"
+    try:
+        resp = requests.get(url)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        #print(soup.prettify)
+        a = soup.find("a",{"title":"Flight report"})
+        if not a:
+            a = soup.find("a",{"title":" Flight report"})
+        if not a:
+            a = soup.find("a",{"title":"Flight report "})
+        if not a:
+            a = soup.find("a",{"title":"Flight Reports"})
+        if not a:
+            a = soup.find("a",{"title":"Flight report EN"})
+        if not a:
+            a = soup.find("a",{"title":"Flight report trimmer closed"}) # tandems?
+        if not a:
+            a = soup.find("a",{"title":"Flight report trimmer closed "}) # tandems?                        
+        if not a:
+            a = soup.find("a",{"title":" Flight report trimmer closed"}) # tandems?            
+
+        if a:
+            #print(a.prettify())
+            download_link = a['href']
+            return download_link
+
+    except requests.exceptions.HTTPError as err:
+        print(err)
+    
+    return None

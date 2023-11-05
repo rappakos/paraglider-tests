@@ -69,7 +69,7 @@ async def get_reports(org:str):
                         SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
                         FROM air_turquoise_reports r  
                         ORDER BY [report_date] DESC
-                        LIMIT 25
+                        LIMIT 100
                     """), db, params=param)
         return df
 
@@ -87,4 +87,30 @@ async def _save_air_turquoise_tests(page:DataFrame):
                             INSERT INTO air_turquoise_reports ([report_date], [item_name], [report_link], [report_class])
                             SELECT :report_date, :item_name, :report_link, :report_class
                         """, params)
+        await db.commit()
+
+async def get_open_reports(org:str):
+        import pandas as pd
+        if org != 'air-turquoise':
+            return pd.DataFrame()
+
+        engine = create_engine(f'sqlite:///{DB_NAME}')
+        with engine.connect() as db:
+            param = {}
+            df  = pd.read_sql_query(text(f"""
+                        SELECT [item_name], [report_link]
+                        FROM air_turquoise_reports r 
+                        WHERE [download_link] is null 
+                        ORDER BY [report_date] DESC
+                        LIMIT 20 -- test
+                    """), db, params=param)
+        return df 
+
+async def save_download_link(report_link, download_link):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute("""UPDATE air_turquoise_reports
+                                SET download_link = ?
+                                WHERE download_link IS NULL AND report_link = ?
+                """, (download_link, report_link))             
+
         await db.commit()
