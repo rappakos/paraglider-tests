@@ -73,6 +73,20 @@ async def get_reports(org:str):
                     """), db, params=param)
         return df
 
+async def get_report_details(org:str, item_id:str):
+        import pandas as pd
+        if org != 'air-turquoise':
+            return pd.DataFrame()
+
+        engine = create_engine(f'sqlite:///{DB_NAME}')
+        with engine.connect() as db:
+            param = {}
+            df  = pd.read_sql_query(text(f"""
+                        SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
+                        FROM air_turquoise_reports r  
+                        WHERE r.[report_link] = '/reports/item/{item_id}'
+                    """), db, params=param)
+        return df     
 
 async def save_tests(org:str, page:DataFrame):
     if org=='air-turquoise':

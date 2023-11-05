@@ -30,7 +30,7 @@
         {% for report in reports %}
         <tr>
             <td>{{report.report_date}}</td>
-            <td>{{report.item_name}}</td>
+            <td><a href='/{{org}}{{report.report_link}}' > {{report.item_name}}</a></td>
             <td>{{report.report_class}}</td>
             <td>{{'-' if report.download_link is none else 'ok'}}</td>
             <!-- <td>{{report.download_link}}</td> -->

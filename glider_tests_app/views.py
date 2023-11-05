@@ -44,6 +44,22 @@ async def reports(request):
         }
     else:
          raise web.HTTPNotFound(reason="Organization not available")
+
+@aiohttp_jinja2.template('item_details.html')
+async def item_details(request):
+    org, item_id = request.match_info.get('org', None), request.match_info.get('item_id', None)
+
+    if org in ORGS:
+
+        report = await db.get_report_details(org, item_id)
+        print(report.head())
+
+        return {
+            'id': item_id
+        }
+    else:
+         raise web.HTTPNotFound(reason="Organization not available")
+
     
 async def load_reports(request):
     org = request.match_info.get('org', None)    
