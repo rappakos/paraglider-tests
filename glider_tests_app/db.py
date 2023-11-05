@@ -46,7 +46,7 @@ async def get_stats():
         param = {}
         df  = pd.read_sql_query(text(f"""
                         SELECT 
-                            'Air Turqouise' [org]
+                            'Air Turquoise' [org]
                             , r.[report_class]
                             , count(r.[item_name]) [item_count]
                             , max(r.[report_date]) [max_date]
