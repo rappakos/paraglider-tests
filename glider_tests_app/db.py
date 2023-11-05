@@ -38,6 +38,25 @@ async def get_start_date(org:str, classification: str):
                     """), db, params=param)
         return max(df['report_date'])
 
+async def get_stats():
+    import pandas as pd
+    
+    engine = create_engine(f'sqlite:///{DB_NAME}')
+    with engine.connect() as db:
+        param = {}
+        df  = pd.read_sql_query(text(f"""
+                        SELECT 
+                            'Air Turqouise' [org]
+                            , r.[report_class]
+                            , count(r.[item_name]) [item_count]
+                            , max(r.[report_date]) [max_date]
+                            , min(r.[report_date]) [min_date]
+                        FROM air_turquoise_reports r  
+                        GROUP BY [report_class]                        
+                        ORDER BY [report_class]  
+                    """), db, params=param)
+        return df
+
 async def get_reports(org:str):
         import pandas as pd
         if org != 'air-turquoise':
@@ -47,7 +66,7 @@ async def get_reports(org:str):
         with engine.connect() as db:
             param = {}
             df  = pd.read_sql_query(text(f"""
-                        SELECT [report_date], [item_name], [report_link], [report_class]
+                        SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
                         FROM air_turquoise_reports r  
                         ORDER BY [report_date] DESC
                         LIMIT 25

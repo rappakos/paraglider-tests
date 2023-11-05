@@ -6,9 +6,19 @@
 {% block content %}
     <table class="w3-table w3-bordered">
         <tr>
-            <th># Gliders</th>
+            <th>Organisation</th>
+            <th>Class</th>
+            <th># Items (type + size!)</th>
+            <th colspan="2">Report range</th>
         </tr>
-
+        {% for row in data %}
+        <tr>
+            <td>{{row.org}}</td>
+            <td>{{row.report_class}}</th>
+            <td>{{row.item_count}}</td>
+            <td>{{row.min_date}} - {{row.max_date}}</td>
+        </tr>
+        {% endfor %}
     </table>
 
 {% endblock %}

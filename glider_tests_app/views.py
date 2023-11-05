@@ -16,11 +16,8 @@ def redirect(router, route_name, org = None):
     return web.HTTPFound(location)
 
 @aiohttp_jinja2.template('index.html')
-async def index(request):
-    
-    return {
-            'test': 'ok'
-    }
+async def index(request):    
+    return {'data': (await db.get_stats()).to_dict('records')}
 
 @aiohttp_jinja2.template('testdata.html')
 async def testdata(request):

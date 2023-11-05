@@ -14,12 +14,14 @@
             <th>Report date</th>
             <th>Item name</th>
             <th>Class</th>
+            <th>Downloaded</th>
         </tr>
         {% for report in reports %}
         <tr>
             <td>{{report.report_date}}</td>
             <td>{{report.item_name}}</td>
             <td>{{report.report_class}}</td>
+            <td>{{report.download_link}}</td>
         </tr>
         {% endfor %}
     </table>
