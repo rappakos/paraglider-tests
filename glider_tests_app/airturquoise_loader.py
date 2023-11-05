@@ -3,13 +3,18 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime
-
+from pypdf import PdfReader
 
 
 
 AIR_TURQUOISE_PAGE_SIZE=25
 AIR_TURQUISE_BASE_URL = 'https://para-test.com'
 AIR_TURQUISE_TEST_URL = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
+
+TEXT_DATA_TEMPLATE = [
+
+]
+
 
 async def get_reports(classification:str, start_day:str):
     page,current_day = 0, datetime.now().isoformat()[:10] # going backwards
@@ -85,3 +90,13 @@ async def get_download_link(link:str):
         print(err)
     
     return None
+
+async def extract_pdf_data(filename:str):
+    textrows = []
+    reader = PdfReader(filename)
+    for page in reader.pages:
+        #lines = [l for l in page.extract_text().split('\n') if l[0].isdigit()]
+        lines = page.extract_text().split('\n')
+        textrows.extend(lines)
+
+    return textrows

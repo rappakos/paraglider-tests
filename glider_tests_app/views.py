@@ -27,15 +27,10 @@ async def reports(request):
 
     org = request.match_info.get('org', None)
     if org in ORGS:
-        #for classification in ['B','C']:
-        #    start_date = await db.get_start_date(org,classification)
-        #    print(classification,start_date)
         reports = await db.get_reports(org)
-        #print(reports.head())
 
         if not reports.empty:
             reports['pdf_available'] = reports.apply(lambda row: exists(f"{DOWNLOAD_FOLDER}/{'_'.join(row.item_name.split())}.pdf") , axis=1)
-
 
         return {
             'org': org,
@@ -53,9 +48,17 @@ async def item_details(request):
 
         report = await db.get_report_details(org, item_id)
         print(report.head())
-
+        textrows = []
+        if not report.empty:
+            for item in report.itertuples(index=None):
+                fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
+                #print(fname)
+                textrows = await airturquoise_loader.extract_pdf_data(fname)
+                    
         return {
-            'id': item_id
+            'id': item_id,
+            'report': report.to_dict('records')[0],
+            'text': textrows
         }
     else:
          raise web.HTTPNotFound(reason="Organization not available")
@@ -86,9 +89,7 @@ async def load_details(request):
             for item in open_reports.itertuples(index=None):
                 download_link = await airturquoise_loader.get_download_link(item.report_link)
                 if download_link:
-                    #print(download_link)
                     await db.save_download_link(item.report_link, download_link)
-                    # TODO DL PDF ?!
                 else:
                     print(f'no success - {airturquoise_loader.AIR_TURQUISE_BASE_URL}{item.report_link}')
 

@@ -5,5 +5,16 @@
 
 {% block content %}
 
+{% if report %}
+    <p>{{report.item_name}}</p>
+    <p>{{report.report_class}}</p>
+    <div>
+        {% for row in text %} 
+            <p>{{row}}</p>
+        {%- endfor %}
+
+    </div>
+
+{% endif %}
 
 {% endblock %}
