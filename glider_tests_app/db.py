@@ -1,10 +1,11 @@
 # db.py
 import aiosqlite
 from sqlalchemy import create_engine,text
+from pandas import DataFrame
 
 DB_NAME = './glider_tests.db'
 INIT_SCRIPT = './glider_tests_app/init_db.sql'
-START_DATE = '2023-01-01' # do not load earlier tests
+START_DATE = '2020-01-01' # do not load earlier tests
 
 
 async def setup_db(app):
@@ -21,5 +22,21 @@ async def setup_db(app):
             await db.executescript(sql_script)
             await db.commit()
 
-async def get_start_date(org:str):
+async def get_start_date(org:str, classification: str):
     return START_DATE
+
+
+async def save_tests(org:str, page:DataFrame):
+    if org=='air-turquoise':
+        await _save_air_turquoise_tests(page)
+    else:
+        print("not implemented yet")
+
+async def _save_air_turquoise_tests(page:DataFrame):
+    async with aiosqlite.connect(DB_NAME) as db:
+        for params in page.itertuples(index=False):
+            await db.execute_insert("""
+                            INSERT INTO air_turquoise_reports ([report_date], [item_name], [report_link], [report_class])
+                            SELECT :report_date, :item_name, :report_link, :report_class
+                        """, params)
+        await db.rollback() # test

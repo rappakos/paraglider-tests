@@ -11,17 +11,15 @@ AIR_TURQUOISE_PAGE_SIZE=25
 AIR_TURQUISE_BASE_URL = 'https://para-test.com'
 AIR_TURQUISE_TEST_URL = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
 
-async def get_tests(start_day:str):
-    # TODO different classes?
-    classification = 'B'
+async def get_tests(classification:str, start_day:str):
     page,current_day = 0, datetime.now().isoformat()[:10] # going backwards
     pages = []
     while current_day > start_day:
-        print(page,current_day,start_day)
+        print(classification, page,current_day,start_day)
         index = page * AIR_TURQUOISE_PAGE_SIZE
 
         table_data = await get_table_data(classification, index)
-        print(table_data.head())
+        #print(table_data.head())
         pages.append(table_data)
 
         # step forward

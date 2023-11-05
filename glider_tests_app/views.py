@@ -36,13 +36,14 @@ async def testdata(request):
 async def load_tests(request):
     org = request.match_info.get('org', None)    
     if request.method == 'POST':
-
-        start_date = await db.get_start_date(org)
-        print(start_date)
         if org=='air-turquoise':
-            pages = await airturquoise_loader.get_tests(start_date)
-            print(len(pages))
+            for classification in ['B','C']:
+                start_date = await db.get_start_date(org,classification)
+                print(classification,start_date)
 
+                pages = await airturquoise_loader.get_tests(classification,start_date)
+                for page in pages:
+                    await db.save_tests(org, page)
 
         raise redirect(request.app.router, 'testdata', org=org)
     else:
