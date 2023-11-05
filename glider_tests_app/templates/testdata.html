@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 
 
-{% set title = org.name %}
+{% set title = orgdata.name %}
 
 {% block content %}
+
+<form action="/{{org}}" method="post" class="w3-container" autocomplete="off">
+    <input type="submit" value="Refresh test list" class="w3-button"  />
+</form>
+
     <table class="w3-table w3-bordered">
         <tr>
-            <th># Gliders</th>
+            <th>Test date</th>
         </tr>
 
     </table>
