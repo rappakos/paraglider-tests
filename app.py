@@ -8,7 +8,7 @@ from aiohttp import web
 from glider_tests_app.routes import setup_routes
 from glider_tests_app.middlewares import setup_middlewares
 #from glider_tests_app.db import setup_db
-#from glider_tests_app.driver import setup_web_driver
+
 
 from config import DefaultConfig
 
