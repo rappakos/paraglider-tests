@@ -4,7 +4,7 @@ from sqlalchemy import create_engine,text
 
 DB_NAME = './glider_tests.db'
 INIT_SCRIPT = './glider_tests_app/init_db.sql'
-START_DATE = '2023-06-01' # do not load earlier
+START_DATE = '2023-01-01' # do not load earlier tests
 
 
 async def setup_db(app):
