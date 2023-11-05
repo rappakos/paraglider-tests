@@ -29,11 +29,13 @@ async def testdata(request):
         #for classification in ['B','C']:
         #    start_date = await db.get_start_date(org,classification)
         #    print(classification,start_date)
-
+        reports = await db.get_reports(org)
+        #print(reports.head())
 
         return {
             'org': org,
-            'orgdata': ORGS[org]            
+            'orgdata': ORGS[org],            
+            'reports': reports.to_dict('records')
         }
     else:
          raise web.HTTPNotFound(reason="Organization not available")
