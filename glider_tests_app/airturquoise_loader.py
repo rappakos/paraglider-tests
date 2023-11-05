@@ -11,7 +11,7 @@ AIR_TURQUOISE_PAGE_SIZE=25
 AIR_TURQUISE_BASE_URL = 'https://para-test.com'
 AIR_TURQUISE_TEST_URL = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
 
-async def get_tests(classification:str, start_day:str):
+async def get_reports(classification:str, start_day:str):
     page,current_day = 0, datetime.now().isoformat()[:10] # going backwards
     pages = []
     while current_day > start_day:

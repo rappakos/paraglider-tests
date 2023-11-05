@@ -19,8 +19,8 @@ def redirect(router, route_name, org = None):
 async def index(request):    
     return {'data': (await db.get_stats()).to_dict('records')}
 
-@aiohttp_jinja2.template('testdata.html')
-async def testdata(request):
+@aiohttp_jinja2.template('reports.html')
+async def reports(request):
     org = request.match_info.get('org', None)
     if org in ORGS:
         #for classification in ['B','C']:
@@ -37,7 +37,7 @@ async def testdata(request):
     else:
          raise web.HTTPNotFound(reason="Organization not available")
     
-async def load_tests(request):
+async def load_reports(request):
     org = request.match_info.get('org', None)    
     if request.method == 'POST':
         if org=='air-turquoise':
@@ -45,10 +45,10 @@ async def load_tests(request):
                 start_date = await db.get_start_date(org,classification)
                 print(classification,start_date)
 
-                pages = await airturquoise_loader.get_tests(classification,start_date)
+                pages = await airturquoise_loader.get_reports(classification,start_date)
                 for page in pages:
                     await db.save_tests(org, page)
 
-        raise redirect(request.app.router, 'testdata', org=org)
+        raise redirect(request.app.router, 'reports', org=org)
     else:
         raise NotImplementedError("invalid?")        
