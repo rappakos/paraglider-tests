@@ -26,6 +26,11 @@ async def index(request):
 async def testdata(request):
     org = request.match_info.get('org', None)
     if org in ORGS:
+        #for classification in ['B','C']:
+        #    start_date = await db.get_start_date(org,classification)
+        #    print(classification,start_date)
+
+
         return {
             'org': org,
             'orgdata': ORGS[org]            

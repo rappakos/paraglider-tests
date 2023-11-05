@@ -23,8 +23,20 @@ async def setup_db(app):
             await db.commit()
 
 async def get_start_date(org:str, classification: str):
-    return START_DATE
+        import pandas as pd
+        if org != 'air-turquoise':
+            return START_DATE
 
+        engine = create_engine(f'sqlite:///{DB_NAME}')
+        with engine.connect() as db:
+            param = {'classification':classification}
+            #print(param)
+            df  = pd.read_sql_query(text(f"""
+                        SELECT  MAX([report_date]) [report_date]
+                        FROM air_turquoise_reports r  
+                        WHERE [report_class]= :classification
+                    """), db, params=param)
+        return max(df['report_date'])
 
 async def save_tests(org:str, page:DataFrame):
     if org=='air-turquoise':
@@ -39,4 +51,4 @@ async def _save_air_turquoise_tests(page:DataFrame):
                             INSERT INTO air_turquoise_reports ([report_date], [item_name], [report_link], [report_class])
                             SELECT :report_date, :item_name, :report_link, :report_class
                         """, params)
-        await db.rollback() # test
+        await db.commit()

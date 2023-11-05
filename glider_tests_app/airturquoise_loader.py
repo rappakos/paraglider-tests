@@ -19,8 +19,9 @@ async def get_tests(classification:str, start_day:str):
         index = page * AIR_TURQUOISE_PAGE_SIZE
 
         table_data = await get_table_data(classification, index)
-        #print(table_data.head())
-        pages.append(table_data)
+        new_data = table_data[table_data['report_date'] > start_day ]
+        if not new_data.empty:
+            pages.append(new_data)
 
         # step forward
         current_day = min(table_data['report_date'])
