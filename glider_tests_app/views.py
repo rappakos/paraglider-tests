@@ -3,7 +3,8 @@ import os
 import aiohttp_jinja2
 from aiohttp import web
 
-#from . import db
+from . import db
+from . import airturquoise_loader
 
 ORGS = { 
     'air-turquoise':  {'name':'Air Turquoise'},
@@ -35,7 +36,13 @@ async def testdata(request):
 async def load_tests(request):
     org = request.match_info.get('org', None)    
     if request.method == 'POST':
-        print("TODO", org)
+
+        start_date = await db.get_start_date(org)
+        print(start_date)
+        if org=='air-turquoise':
+            pages = await airturquoise_loader.get_tests(start_date)
+            print(len(pages))
+
 
         raise redirect(request.app.router, 'testdata', org=org)
     else:
