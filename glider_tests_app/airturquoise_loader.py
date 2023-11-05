@@ -12,7 +12,28 @@ AIR_TURQUISE_BASE_URL = 'https://para-test.com'
 AIR_TURQUISE_TEST_URL = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
 
 TEXT_DATA_TEMPLATE = [
-
+ 'Test Report generated automatically {*}1. Inflation/Take-off {rating}',
+ '2. Landing {rating}',
+ '3. Speed in straight flight {rating}',
+ '4. Control movement {rating}',
+ '5. Pitch stability exiting accelerated flight {rating}',
+ '6. Pitch stability operating controls during accelerated\nflight{rating}',
+ '7. Roll stability and damping {rating}',
+ '8. Stability in gentle spirals {rating}',
+ '9. Behaviour exiting a fully developed spiral dive {rating}',
+ '10. Symmetric front collapse {rating}',
+ '11. Exiting deep stall (parachutal stall) {rating}',
+ '12. High angle of attack recovery {rating}',
+ '13. Recovery from a developed full stall {rating}',
+ '14. Asymmetric collapse {rating}',
+ '15. Directional control with a maintained asymmetric\ncollapse{rating}',
+ '16. Trim speed spin tendency {rating}',
+ '17. Low speed spin tendency {rating}',
+ '18. Recovery from a developed spin {rating}',
+ '19. B-line stall {rating}',
+ '20. Big ears {rating}',
+ '21. Big ears in accelerated flight {rating}',
+ '22. Alternative means of directional control {rating}',
 ]
 
 
