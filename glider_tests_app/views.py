@@ -33,6 +33,9 @@ async def reports(request):
             reports['pdf_available'] = reports.apply(lambda row: exists(f"{DOWNLOAD_FOLDER}/{'_'.join(row.item_name.split())}.pdf") , axis=1)
             #reports['eval_available'] = reports.apply(lambda x: True if x.evaluation==1 else False , axis=1)
 
+        evaluations = await db.get_evaluations(org)
+        print(evaluations.head())
+
         return {
             'org': org,
             'orgdata': ORGS[org],            
@@ -52,17 +55,17 @@ async def item_details(request):
         if not report.empty:
             for item in report.itertuples(index=None):
                 evaluation = await db.get_evaluation(org, item.item_name)
-
+                print(evaluation)
                 if not evaluation.empty:
                     print('from db')
-                    print(evaluation.head())
+                    #print(evaluation.head())
                     textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
                 else:
                     fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
                     #print(fname)
                     evaluation = await airturquoise_loader.extract_pdf_data(item.item_name, fname)
                     print('from pdf')          
-                    print(evaluation.head())
+                    #print(evaluation.head())
                     if evaluation is not None:
                         textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
                         await db.save_evaluation(org, evaluation)

@@ -9,9 +9,12 @@ CREATE TABLE IF NOT EXISTS air_turquoise_reports
                report_class TEXT,
                UNIQUE (item_name COLLATE NOCASE));
 
+
+--DROP TABLE air_turquoise_evaluation;
 --DROP TABLE air_turquoise_tests;
+
 CREATE TABLE IF NOT EXISTS air_turquoise_tests (
-    test_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_id INTEGER PRIMARY KEY AUTOINCREMENT,
     test_name TEXT
 );
 
@@ -46,7 +49,7 @@ SELECT l.test_name
 FROM list l
 WHERE NOT EXISTS (SELECT 1 FROM air_turquoise_tests t WHERE t.test_name=l.test_name );
 
---DROP TABLE air_turquoise_evaluation;
+
 CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
         item_name TEXT NOT NULL,
         test_id  INTEGER NOT NULL,

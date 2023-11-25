@@ -98,23 +98,41 @@ async def get_evaluation(org:str, item_name:str):
 
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
-            param = {}
+            param = {'item_name':item_name}
             df  = pd.read_sql_query(text(f"""
-                        SELECT r.[item_name], t.test_name [test], e.test_value [rating]
-                        FROM air_turquoise_reports r  
-                        INNER JOIN air_turquoise_evaluation e ON  r.[item_name]=e.[item_name]
+                        SELECT e.[item_name], t.test_name [test], e.test_value [rating]
+                        FROM air_turquoise_evaluation e 
                         INNER JOIN air_turquoise_tests t ON t.test_id = e.test_id
-                        WHERE r.[item_name] = '{item_name}'
+                        WHERE e.[item_name] = :item_name or e.[item_name] = '{item_name}'
                     """), db, params=param)
         return df
+
+
+async def get_evaluations(org:str):
+        import pandas as pd
+        if org != 'air-turquoise':
+            return pd.DataFrame()
+
+        engine = create_engine(f'sqlite:///{DB_NAME}')
+        with engine.connect() as db:
+            param = {}
+            df  = pd.read_sql_query(text(f"""
+                        SELECT e.[item_name], e.test_id, e.test_value
+                        FROM air_turquoise_evaluation e 
+                        --SELECT * FROM  air_turquoise_tests t 
+                    """), db, params=param)
+        return df
+
+
 async def save_evaluation(org:str, evaluation):
     if org=='air-turquoise':
         async with aiosqlite.connect(DB_NAME) as db:
             for params in evaluation.itertuples(index=False):
                 #print(params)
                 res = await db.execute_insert("""
+                                -- WHY DOES THIS NOT WORK?!
                                 INSERT OR IGNORE INTO air_turquoise_evaluation ([item_name], [test_id], [test_value])
-                                SELECT :item_name, :test, :rating
+                                SELECT :item_name, t.test_id, :rating
                                 FROM air_turquoise_tests t
                                 WHERE t.[test_name]= :test
                             """, params)
