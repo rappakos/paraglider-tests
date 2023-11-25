@@ -46,15 +46,26 @@ async def item_details(request):
     org, item_id = request.match_info.get('org', None), request.match_info.get('item_id', None)
 
     if org in ORGS:
-
         report = await db.get_report_details(org, item_id)
-        print(report.head())
+        #print(report.head())
         textrows = []
         if not report.empty:
             for item in report.itertuples(index=None):
-                fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
-                #print(fname)
-                textrows = await airturquoise_loader.extract_pdf_data(fname)
+                evaluation = await db.get_evaluation(org, item.item_name)
+
+                if not evaluation.empty:
+                    print('from db')
+                    print(evaluation.head())
+                    textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
+                else:
+                    fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
+                    #print(fname)
+                    evaluation = await airturquoise_loader.extract_pdf_data(item.item_name, fname)
+                    print('from pdf')          
+                    print(evaluation.head())
+                    if evaluation is not None:
+                        textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
+                        await db.save_evaluation(org, evaluation)
                     
         return {
             'id': item_id,

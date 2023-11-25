@@ -112,7 +112,7 @@ async def get_download_link(link:str):
     
     return None
 
-async def extract_pdf_data(filename:str):
+async def extract_pdf_data(item_name:str, filename:str):
     textrows = []
     reader = PdfReader(filename)
     for page in reader.pages:
@@ -120,10 +120,10 @@ async def extract_pdf_data(filename:str):
         lines = page.extract_text().split('\n')
         textrows.extend(lines)
 
-    return filtered(textrows)
+    return pd.DataFrame(filtered(item_name, textrows))
 
 
-def filtered(textrows):
+def filtered(item_name:str, textrows):
     import re
 
     results= []
@@ -136,7 +136,7 @@ def filtered(textrows):
                 #print(m, m.group('rating'))
                 test,rating = m.group('test'), m.group('rating')
                 rowindex += j
-                results.append(f"{test}:  {rating}")
+                results.append({'item_name':item_name, 'test':test, 'rating': rating})
                 break
         if i==1 and rowindex==0:
             print("there was no match for the first entry")
