@@ -12,28 +12,28 @@ AIR_TURQUISE_BASE_URL = 'https://para-test.com'
 AIR_TURQUISE_TEST_URL = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
 
 TEXT_DATA_TEMPLATE = [
- 'Test Report generated automatically {*}1. Inflation/Take-off {rating}',
- '2. Landing {rating}',
- '3. Speed in straight flight {rating}',
- '4. Control movement {rating}',
- '5. Pitch stability exiting accelerated flight {rating}',
- '6. Pitch stability operating controls during accelerated\nflight{rating}',
- '7. Roll stability and damping {rating}',
- '8. Stability in gentle spirals {rating}',
- '9. Behaviour exiting a fully developed spiral dive {rating}',
- '10. Symmetric front collapse {rating}',
- '11. Exiting deep stall (parachutal stall) {rating}',
- '12. High angle of attack recovery {rating}',
- '13. Recovery from a developed full stall {rating}',
- '14. Asymmetric collapse {rating}',
- '15. Directional control with a maintained asymmetric\ncollapse{rating}',
- '16. Trim speed spin tendency {rating}',
- '17. Low speed spin tendency {rating}',
- '18. Recovery from a developed spin {rating}',
- '19. B-line stall {rating}',
- '20. Big ears {rating}',
- '21. Big ears in accelerated flight {rating}',
- '22. Alternative means of directional control {rating}',
+ 'Test Report generated automatically(.+)(?P<test>1. Inflation/Take-off) (?P<rating>[A-D])',
+ '(?P<test>2. Landing) (?P<rating>[A-D])',
+ '(?P<test>3. Speed in straight flight) (?P<rating>[A-D])',
+ '(?P<test>4. Control movement) (?P<rating>[A-D])',
+ '(?P<test>5. Pitch stability exiting accelerated flight) (?P<rating>[A-D])',
+ '(?P<test>6. Pitch stability operating controls during accelerated\nflight)(?P<rating>[A-D])',
+ '(?P<test>7. Roll stability and damping) (?P<rating>[A-D])',
+ '(?P<test>8. Stability in gentle spirals) (?P<rating>[A-D])',
+ '(?P<test>9. Behaviour exiting a fully developed spiral dive) (?P<rating>[A-D])',
+ '(?P<test>10. Symmetric front collapse) (?P<rating>[A-D])',
+ '(?P<test>11. Exiting deep stall (parachutal stall)) (?P<rating>[A-D])',
+ '(?P<test>12. High angle of attack recovery) (?P<rating>[A-D])',
+ '(?P<test>13. Recovery from a developed full stall) (?P<rating>[A-D])',
+ '(?P<test>14. Asymmetric collapse) (?P<rating>[A-D])',
+ '(?P<test>15. Directional control with a maintained asymmetric\ncollapse)(?P<rating>[A-D])',
+ '(?P<test>16. Trim speed spin tendency) (?P<rating>[A-D])',
+ '(?P<test>17. Low speed spin tendency) (?P<rating>[A-D])',
+ '(?P<test>18. Recovery from a developed spin) (?P<rating>[A-D])',
+ '(?P<test>19. B-line stall) (?P<rating>[A-D])',
+ '(?P<test>20. Big ears) (?P<rating>[A-D])',
+ '(?P<test>21. Big ears in accelerated flight) (?P<rating>[A-D])',
+ '(?P<test>22. Alternative means of directional control) (?P<rating>[A-D])',
 ]
 
 
@@ -120,4 +120,27 @@ async def extract_pdf_data(filename:str):
         lines = page.extract_text().split('\n')
         textrows.extend(lines)
 
-    return textrows
+    return filtered(textrows)
+
+
+def filtered(textrows):
+    import re
+
+    results= []
+    for i,pattern in enumerate(TEXT_DATA_TEMPLATE):
+        #print(i,pattern)
+        rowindex = 0
+        for j,row in enumerate(textrows[rowindex:]):
+            m = re.match(pattern,row)
+            if m:
+                #print(m, m.group('rating'))
+                test,rating = m.group('test'), m.group('rating')
+                rowindex += j
+                results.append(f"{test}:  {rating}")
+                break
+        if i==1 and rowindex==0:
+            print("there was no match for the first entry")
+            break
+
+
+    return results 
