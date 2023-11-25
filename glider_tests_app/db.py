@@ -66,8 +66,11 @@ async def get_reports(org:str):
         with engine.connect() as db:
             param = {}
             df  = pd.read_sql_query(text(f"""
-                        SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
+                        SELECT r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
+                            , case when count(e.test_id) > 0 then 1 else 0 end [evaluation]
                         FROM air_turquoise_reports r  
+                        LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
+                        GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
                         ORDER BY [report_date] DESC
                         LIMIT 500
                     """), db, params=param)
@@ -133,7 +136,7 @@ async def get_download_links(org:str):
                         FROM air_turquoise_reports r 
                         WHERE r.[download_link] is not null 
                         ORDER BY r.[report_date] DESC
-                        LIMIT 100 -- test
+                        LIMIT 150 -- test
                     """), db, params=param)
         return df      
 

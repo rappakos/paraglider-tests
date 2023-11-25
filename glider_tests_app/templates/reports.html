@@ -26,6 +26,7 @@
             <th>Class</th>
             <th>Download link</th>
             <th>PDF?</th>
+            <th>Ratings?</th>
         </tr>
         {% for report in reports %}
         <tr>
@@ -35,6 +36,7 @@
             <td>{{'-' if report.download_link is none else 'ok'}}</td>
             <!-- <td>{{report.download_link}}</td> -->
             <td>{{report.pdf_available}}</td>
+            <td>{{report.evaluation}}</td>
         </tr>
         {% endfor %}
     </table>
