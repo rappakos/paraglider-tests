@@ -78,7 +78,33 @@ async def item_details(request):
     else:
          raise web.HTTPNotFound(reason="Organization not available")
 
-    
+@aiohttp_jinja2.template('evaluations.html')
+async def evaluations(request):
+    import pandas as pd
+
+    org = request.match_info.get('org', None)
+    if org in ORGS:
+        evaluations = await db.get_evaluations(org)
+        #print(evaluations.head())
+
+        pivoted = pd.pivot_table(evaluations,index='item_name', columns='test_name', values='test_value', aggfunc=max, fill_value=0)
+
+        def sorter(name):
+            #print(name.split('.')) 
+            return int(name.split('.')[0])
+
+        sorted_columns = sorted(pivoted.columns.values, key=sorter)
+        pivoted = pivoted[sorted_columns]
+        print(pivoted.head())
+
+        return {
+            'org': org,
+            'orgdata': ORGS[org],    
+            'evaluations': evaluations.to_dict('records')
+        }
+    else:
+         raise web.HTTPNotFound(reason="Organization not available")
+
 async def load_reports(request):
     org = request.match_info.get('org', None)    
     if request.method == 'POST':
