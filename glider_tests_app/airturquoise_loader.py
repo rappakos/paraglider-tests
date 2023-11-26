@@ -17,20 +17,20 @@ TEXT_DATA_TEMPLATE = [
  '(?P<test>3. Speed in straight flight) (?P<rating>[A-D])',
  '(?P<test>4. Control movement) (?P<rating>[A-D])',
  '(?P<test>5. Pitch stability exiting accelerated flight) (?P<rating>[A-D])',
- '(?P<test>6. Pitch stability operating controls during accelerated\nflight)(?P<rating>[A-D])',
+ '(?P<test>6. Pitch stability operating controls during accelerated\nflight)(?P<rating>[A-D])', #  multiline!
  '(?P<test>7. Roll stability and damping) (?P<rating>[A-D])',
  '(?P<test>8. Stability in gentle spirals) (?P<rating>[A-D])',
  '(?P<test>9. Behaviour exiting a fully developed spiral dive) (?P<rating>[A-D])',
  '(?P<test>10. Symmetric front collapse) (?P<rating>[A-D])',
- '(?P<test>11. Exiting deep stall (parachutal stall)) (?P<rating>[A-D])',
+ '(?P<test>11. Exiting deep stall \(parachutal stall\)) (?P<rating>[A-D])',
  '(?P<test>12. High angle of attack recovery) (?P<rating>[A-D])',
  '(?P<test>13. Recovery from a developed full stall) (?P<rating>[A-D])',
  '(?P<test>14. Asymmetric collapse) (?P<rating>[A-D])',
- '(?P<test>15. Directional control with a maintained asymmetric\ncollapse)(?P<rating>[A-D])',
+ '(?P<test>15. Directional control with a maintained asymmetric\ncollapse)(?P<rating>[A-D])', # multiline!
  '(?P<test>16. Trim speed spin tendency) (?P<rating>[A-D])',
  '(?P<test>17. Low speed spin tendency) (?P<rating>[A-D])',
  '(?P<test>18. Recovery from a developed spin) (?P<rating>[A-D])',
- '(?P<test>19. B-line stall) (?P<rating>[A-D])',
+ '(?P<test>19. B-line stall) (?P<rating>[0A-D])', # 0: not available
  '(?P<test>20. Big ears) (?P<rating>[A-D])',
  '(?P<test>21. Big ears in accelerated flight) (?P<rating>[A-D])',
  '(?P<test>22. Alternative means of directional control) (?P<rating>[A-D])',
@@ -116,7 +116,6 @@ async def extract_pdf_data(item_name:str, filename:str):
     textrows = []
     reader = PdfReader(filename)
     for page in reader.pages:
-        #lines = [l for l in page.extract_text().split('\n') if l[0].isdigit()]
         lines = page.extract_text().split('\n')
         textrows.extend(lines)
 
@@ -128,12 +127,15 @@ def filtered(item_name:str, textrows):
 
     results= []
     for i,pattern in enumerate(TEXT_DATA_TEMPLATE):
-        #print(i,pattern)
+
         rowindex = 0
         for j,row in enumerate(textrows[rowindex:]):
-            m = re.match(pattern,row)
+            if "\n" in pattern:
+                doublerow = f"{row}\n{textrows[rowindex+j+1]}"
+                m = re.match(pattern,doublerow,re.MULTILINE)
+            else:
+                m = re.match(pattern,row)
             if m:
-                #print(m, m.group('rating'))
                 test,rating = m.group('test'), m.group('rating')
                 rowindex += j
                 results.append({'item_name':item_name, 'test':test, 'rating': rating})
@@ -141,6 +143,7 @@ def filtered(item_name:str, textrows):
         if i==1 and rowindex==0:
             print("there was no match for the first entry")
             break
-
+    #print(len(TEXT_DATA_TEMPLATE),len(results))
+    assert(len(results)==0 or len(results)==len(TEXT_DATA_TEMPLATE))
 
     return results 

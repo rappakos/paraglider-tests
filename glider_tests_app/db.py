@@ -12,7 +12,7 @@ async def setup_db(app):
     app['DB_NAME'] = DB_NAME
     async with aiosqlite.connect(DB_NAME) as db:
         # only test
-        async with db.execute("SELECT count(*) FROM air_turquoise_tests") as cursor:
+        async with db.execute("SELECT 1") as cursor:
             async for row in cursor:
                 print(row[0])
 
@@ -67,7 +67,7 @@ async def get_reports(org:str):
             param = {}
             df  = pd.read_sql_query(text(f"""
                         SELECT r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
-                            , case when count(e.test_id) > 0 then 1 else 0 end [evaluation]
+                            ,  count(e.test_value) [evaluation]
                         FROM air_turquoise_reports r  
                         LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
                         GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
@@ -100,10 +100,9 @@ async def get_evaluation(org:str, item_name:str):
         with engine.connect() as db:
             param = {'item_name':item_name}
             df  = pd.read_sql_query(text(f"""
-                        SELECT e.[item_name], t.test_name [test], e.test_value [rating]
+                        SELECT e.[item_name], e.test_name [test], e.test_value [rating]
                         FROM air_turquoise_evaluation e 
-                        INNER JOIN air_turquoise_tests t ON t.test_id = e.test_id
-                        WHERE e.[item_name] = :item_name or e.[item_name] = '{item_name}'
+                        WHERE e.[item_name] = :item_name
                     """), db, params=param)
         return df
 
@@ -117,9 +116,8 @@ async def get_evaluations(org:str):
         with engine.connect() as db:
             param = {}
             df  = pd.read_sql_query(text(f"""
-                        SELECT e.[item_name], e.test_id, e.test_value
+                        SELECT e.[item_name], e.test_name, e.test_value
                         FROM air_turquoise_evaluation e 
-                        --SELECT * FROM  air_turquoise_tests t 
                     """), db, params=param)
         return df
 
@@ -130,11 +128,8 @@ async def save_evaluation(org:str, evaluation):
             for params in evaluation.itertuples(index=False):
                 #print(params)
                 res = await db.execute_insert("""
-                                -- WHY DOES THIS NOT WORK?!
-                                INSERT OR IGNORE INTO air_turquoise_evaluation ([item_name], [test_id], [test_value])
-                                SELECT :item_name, t.test_id, :rating
-                                FROM air_turquoise_tests t
-                                WHERE t.[test_name]= :test
+                                --INSERT OR IGNORE INTO air_turquoise_evaluation ([item_name], [test_name], [test_value])
+                                SELECT :item_name, :test, :rating
                             """, params)
                 #print(res)
             await db.commit()        
