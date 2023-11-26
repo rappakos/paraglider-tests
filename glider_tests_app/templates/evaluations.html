@@ -7,8 +7,19 @@
 
     <table class="w3-table w3-bordered">
         <tr>
-            <th>Glider</th>
+            <th>Item name</th>
+            {% for column in evaluations.columns %}
+                <th style="writing-mode: vertical-rl;text-orientation: mixed;" >{{column}}</th>
+            {% endfor %}
         </tr>
+        {% for i in range(evaluations.index|length) %}
+        <tr>
+            <th>{{evaluations.index[i]}}</th>
+            {% for j in range(evaluations.columns|length) %}
+            <td>{{evaluations.data[i][j]}}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
     </table>
 
 {% endblock %}

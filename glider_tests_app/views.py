@@ -95,12 +95,12 @@ async def evaluations(request):
 
         sorted_columns = sorted(pivoted.columns.values, key=sorter)
         pivoted = pivoted[sorted_columns]
-        print(pivoted.head())
+        #print(pivoted.head())
 
         return {
             'org': org,
             'orgdata': ORGS[org],    
-            'evaluations': evaluations.to_dict('records')
+            'evaluations': pivoted.to_dict('split')
         }
     else:
          raise web.HTTPNotFound(reason="Organization not available")
