@@ -9,6 +9,7 @@
             <th>Organisation</th>
             <th>Class</th>
             <th># Items (type + size!)</th>
+            <th>Evaluations</th>
             <th colspan="2">Report range</th>
         </tr>
         {% for row in data %}
@@ -16,6 +17,7 @@
             <td>{{row.org}}</td>
             <td>{{row.report_class}}</th>
             <td>{{row.item_count}}</td>
+            <td>{{row.eval_count}}</td>
             <td>{{row.min_date}} - {{row.max_date}}</td>
         </tr>
         {% endfor %}

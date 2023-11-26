@@ -48,10 +48,12 @@ async def get_stats():
                         SELECT 
                             'Air Turquoise' [org]
                             , r.[report_class]
-                            , count(r.[item_name]) [item_count]
+                            , count(distinct r.[item_name]) [item_count]
                             , max(r.[report_date]) [max_date]
                             , min(r.[report_date]) [min_date]
+                            , count(distinct e.[item_name]) [eval_count]
                         FROM air_turquoise_reports r  
+                        LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
                         GROUP BY [report_class]                        
                         ORDER BY [report_class]  
                     """), db, params=param)
@@ -184,7 +186,7 @@ async def get_download_links(org:str):
                         FROM air_turquoise_reports r 
                         WHERE r.[download_link] is not null 
                         ORDER BY r.[report_date] DESC
-                        LIMIT 150 -- test
+                        LIMIT 200 -- test
                     """), db, params=param)
         return df      
 
