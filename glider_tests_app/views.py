@@ -13,6 +13,11 @@ ORGS = {
 
 DOWNLOAD_FOLDER = 'data/pdf'
 
+def get_filename(item_name:str):
+    name =item_name.replace('"','')
+    return f"{DOWNLOAD_FOLDER}/{'_'.join(name.split())}.pdf"
+
+
 def redirect(router, route_name, org = None):
     location = router[route_name].url_for(org=org)
     return web.HTTPFound(location)
@@ -30,7 +35,7 @@ async def reports(request):
         reports = await db.get_reports(org)
 
         if not reports.empty:
-            reports['pdf_available'] = reports.apply(lambda row: exists(f"{DOWNLOAD_FOLDER}/{'_'.join(row.item_name.split())}.pdf") , axis=1)
+            reports['pdf_available'] = reports.apply(lambda row: exists(get_filename(row.item_name)) , axis=1)
             #reports['eval_available'] = reports.apply(lambda x: True if x.evaluation==1 else False , axis=1)
 
         #evaluations = await db.get_evaluations(org)
@@ -61,7 +66,7 @@ async def item_details(request):
                     #print(evaluation.head())
                     textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
                 else:
-                    fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
+                    fname = get_filename(item.item_name)
                     #print(fname)
                     evaluation = await airturquoise_loader.extract_pdf_data(item.item_name, fname)
                     #print('from pdf')          
@@ -149,7 +154,7 @@ async def load_pdf(request):
             file_checks =  await db.get_download_links(org)
             for item in file_checks.itertuples(index=None):
                 #print(item.item_name, item.download_link)
-                fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
+                fname = get_filename(item.item_name)
                 if exists(fname):
                     print(f'{fname} - ok')
                 else:
@@ -171,7 +176,7 @@ async def load_eval(request):
             open_evals = await db.get_open_evaluations(org)
             #print(open_evals.head())
             for item in open_evals.itertuples(index=None):
-                fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
+                fname = get_filename(item.item_name)
                 if exists(fname):
                     print('extracting', item.item_name)
                     evaluation = await airturquoise_loader.extract_pdf_data(item.item_name, fname)
