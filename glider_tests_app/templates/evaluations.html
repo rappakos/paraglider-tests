@@ -5,18 +5,19 @@
 
 {% block content %}
 
-    <table class="w3-table w3-bordered">
+    <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
             <th>Item name</th>
-            {% for column in evaluations.columns %}
-                <th style="writing-mode: vertical-rl;text-orientation: mixed;" >{{column}}</th>
-            {% endfor %}
+            {% for j in range(evaluations.columns|length) -%}
+                <!-- <th class="w3-center" style="writing-mode: vertical-rl;text-orientation: mixed;" >{{column}}</th> -->
+                <th class="w3-center" title="{{evaluations.columns[j]}}" >{{j+1}}.</th>
+            {%- endfor %}
         </tr>
         {% for i in range(evaluations.index|length) %}
         <tr>
             <th>{{evaluations.index[i]}}</th>
             {% for j in range(evaluations.columns|length) %}
-            <td>{{evaluations.data[i][j]}}</td>
+            <td class="w3-center" title="{{evaluations.columns[j]}}"  >{{evaluations.data[i][j]}}</td>
             {% endfor %}
         </tr>
         {% endfor %}
