@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 
-
 {% set title = orgdata.name %}
 
 {% block content %}
-
     <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
             <th>Item name</th>
@@ -17,7 +15,7 @@
         <tr>
             <th>{{evaluations.index[i]}}</th>
             {% for j in range(evaluations.columns|length) %}
-            <td class="w3-center" title="{{evaluations.columns[j]}}"  >{{evaluations.data[i][j]}}</td>
+                <td class="w3-center {{evaluations.data[i][j]}}" title="{{evaluations.columns[j]}}"  >{{evaluations.data[i][j]}}</td>
             {% endfor %}
         </tr>
         {% endfor %}

@@ -96,6 +96,8 @@ async def get_download_link(link:str):
         if not a:
             a = soup.find("a",{"title":"Flight report EN"})
         if not a:
+            a = soup.find("a",{"title":"Flight test EN"})            
+        if not a:
             a = soup.find("a",{"title":"Flight report trimmer closed"}) # tandems?
         if not a:
             a = soup.find("a",{"title":"Flight report trimmer closed "}) # tandems?                        
