@@ -1,7 +1,7 @@
 # db.py
 import aiosqlite
 from sqlalchemy import create_engine,text
-from pandas import DataFrame
+from pandas import DataFrame, read_sql_query
 
 DB_NAME = './glider_tests.db'
 INIT_SCRIPT = './glider_tests_app/init_db.sql'
@@ -73,6 +73,7 @@ async def get_reports(org:str):
                         FROM air_turquoise_reports r  
                         LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
                         GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
+                        HAVING  r.[report_link] IS NULL OR r.[download_link] IS NULL OR count(e.test_value)=0
                         ORDER BY [report_date] DESC
                         LIMIT 500
                     """), db, params=param)
@@ -94,14 +95,13 @@ async def get_report_details(org:str, item_id:str):
         return df
 
 async def get_evaluation(org:str, item_name:str):
-        import pandas as pd
         if org != 'air-turquoise':
-            return pd.DataFrame()
+            return DataFrame()
 
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {'item_name':item_name}
-            df  = pd.read_sql_query(text(f"""
+            df  = read_sql_query(text(f"""
                         SELECT e.[item_name], e.test_name [test], e.test_value [rating]
                         FROM air_turquoise_evaluation e 
                         WHERE e.[item_name] = :item_name
@@ -110,14 +110,13 @@ async def get_evaluation(org:str, item_name:str):
 
 
 async def get_evaluations(org:str):
-        import pandas as pd
         if org != 'air-turquoise':
-            return pd.DataFrame()
+            return DataFrame()
 
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {}
-            df  = pd.read_sql_query(text(f"""
+            df  = read_sql_query(text(f"""
                         SELECT e.[item_name], e.test_name, e.test_value
                         FROM air_turquoise_evaluation e 
                     """), db, params=param)
@@ -139,7 +138,22 @@ async def save_evaluation(org:str, evaluation):
         print("not implemented yet")     
 
 
+async def get_open_evaluations(org:str):
+    if org != 'air-turquoise':
+        return DataFrame()
 
+    engine = create_engine(f'sqlite:///{DB_NAME}')
+    with engine.connect() as db:
+        param = {}
+        df  = read_sql_query(text(f"""
+                        SELECT r.[item_name]
+                        FROM air_turquoise_reports r 
+                        WHERE NOT EXISTS (select 1 from air_turquoise_evaluation e 
+                                where e.[item_name]=r.[item_name])
+                        ORDER BY r.[report_date] DESC,  r.[item_name] ASC
+                        LIMIT 100 -- test
+                """), db, params=param)
+    return df
 
 async def save_tests(org:str, page:DataFrame):
     if org=='air-turquoise':

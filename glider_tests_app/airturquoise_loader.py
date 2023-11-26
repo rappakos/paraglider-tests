@@ -146,6 +146,8 @@ def filtered(item_name:str, textrows):
             print("there was no match for the first entry")
             break
     #print(len(TEXT_DATA_TEMPLATE),len(results))
-    assert(len(results)==0 or len(results)==len(TEXT_DATA_TEMPLATE))
-
-    return results 
+    #assert(len(results)==0 or len(results)==len(TEXT_DATA_TEMPLATE))
+    if len(results)==len(TEXT_DATA_TEMPLATE):
+        return results 
+    else: 
+        return None

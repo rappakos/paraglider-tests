@@ -5,19 +5,24 @@
 
 {% block content %}
 
-<div class="w3-row w3-half">
-    <form action="/{{org}}" method="post" class="w3-container w3-quarter" autocomplete="off" >
+<div class="w3-row ">
+    <form action="/{{org}}" method="post" class="w3-container " autocomplete="off" >
         <input type="submit" value="Refresh test list" class="w3-button"  />
     </form>
 
-    <form action="/{{org}}/details" method="post" class="w3-container w3-quarter" autocomplete="off">
+    <form action="/{{org}}/details" method="post" class="w3-container " autocomplete="off">
         <input type="submit" value="Get download links" class="w3-button"  />
     </form>
 
-    <form action="/{{org}}/load-pdf" method="post" class="w3-container w3-quarter" autocomplete="off">
+    <form action="/{{org}}/load-pdf" method="post" class="w3-container " autocomplete="off">
         <input type="submit" value="Get PDF files" class="w3-button"  />
     </form>
-    <form action="/{{org}}/evaluations" method="get" class="w3-container w3-quarter" autocomplete="off">
+
+    <form action="/{{org}}/load-eval" method="post" class="w3-container" autocomplete="off">
+        <input type="submit" value="Extract PDF" class="w3-button"  />
+    </form>
+
+    <form action="/{{org}}/evaluations" method="get" class="w3-container" autocomplete="off">
         <input type="submit" value="To evaluations" class="w3-button"  />
     </form>
 

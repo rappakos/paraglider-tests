@@ -161,3 +161,25 @@ async def load_pdf(request):
         raise redirect(request.app.router, 'reports', org=org)
     else:
         raise NotImplementedError("invalid?")                     
+    
+async def load_eval(request):
+    from os.path import exists
+
+    org = request.match_info.get('org', None)    
+    if request.method == 'POST':
+        if org=='air-turquoise':
+            open_evals = await db.get_open_evaluations(org)
+            #print(open_evals.head())
+            for item in open_evals.itertuples(index=None):
+                fname = f"{DOWNLOAD_FOLDER}/{'_'.join(item.item_name.split())}.pdf"
+                if exists(fname):
+                    print('extracting', item.item_name)
+                    evaluation = await airturquoise_loader.extract_pdf_data(item.item_name, fname)
+                    if evaluation is not None:
+                        await db.save_evaluation(org, evaluation)                    
+                else:
+                    print('skipping', item.item_name)
+
+        raise redirect(request.app.router, 'reports', org=org)
+    else:
+        raise NotImplementedError("invalid?")         
