@@ -128,7 +128,7 @@ async def save_evaluation(org:str, evaluation):
             for params in evaluation.itertuples(index=False):
                 #print(params)
                 res = await db.execute_insert("""
-                                --INSERT OR IGNORE INTO air_turquoise_evaluation ([item_name], [test_name], [test_value])
+                                INSERT OR IGNORE INTO air_turquoise_evaluation ([item_name], [test_name], [test_value])
                                 SELECT :item_name, :test, :rating
                             """, params)
                 #print(res)

@@ -33,8 +33,8 @@ async def reports(request):
             reports['pdf_available'] = reports.apply(lambda row: exists(f"{DOWNLOAD_FOLDER}/{'_'.join(row.item_name.split())}.pdf") , axis=1)
             #reports['eval_available'] = reports.apply(lambda x: True if x.evaluation==1 else False , axis=1)
 
-        evaluations = await db.get_evaluations(org)
-        print(evaluations.head())
+        #evaluations = await db.get_evaluations(org)
+        #print(evaluations.head())
 
         return {
             'org': org,
