@@ -94,9 +94,9 @@ async def item_details(request):
 async def evaluations(request):
     import pandas as pd
 
-    org = request.match_info.get('org', None)
+    org, item_name, weight = request.match_info.get('org', None),request.rel_url.query.get('item_name', ''),request.rel_url.query.get('weight', '')
     if org in ORGS:
-        evaluations = await db.get_evaluations(org)
+        evaluations = await db.get_evaluations(org, item_name, weight)
         #print(evaluations.head())
 
         # removes rows with 'weight_min','weight_max' None
@@ -113,7 +113,11 @@ async def evaluations(request):
         return {
             'org': org,
             'orgdata': ORGS[org],    
-            'evaluations': pivoted.to_dict('split')
+            'evaluations': pivoted.to_dict('split'),
+            'filter': {
+                'item_name':item_name,
+                'weight':weight
+            }
         }
     else:
          raise web.HTTPNotFound(reason="Organization not available")

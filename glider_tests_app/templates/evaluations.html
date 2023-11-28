@@ -3,6 +3,10 @@
 {% set title = orgdata.name %}
 
 {% block content %}
+<form action="/{{org}}/evaluations" method="get" class="w3-container" autocomplete="off">
+    <button type="submit" class="btn btn-success" >
+     <i class="fa fa-filter"></i> Filter table
+    </button>
     <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
             <th>Item name</th>
@@ -10,6 +14,13 @@
             {% for j in range(evaluations.columns|length) -%}
                 <!-- <th class="w3-center" style="writing-mode: vertical-rl;text-orientation: mixed;" >{{column}}</th> -->
                 <th class="w3-center" title="{{evaluations.columns[j][1]}}" >{{j+1}}.</th>
+            {%- endfor %}
+        </tr>
+        <tr>
+            <th><input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" /></th>
+            <th><input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
+            {% for j in range(evaluations.columns|length) -%}
+            <th></th>
             {%- endfor %}
         </tr>
         {% for i in range(evaluations.index|length) %}
@@ -22,5 +33,5 @@
         </tr>
         {% endfor %}
     </table>
-
+</form>
 {% endblock %}

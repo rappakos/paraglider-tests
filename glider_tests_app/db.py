@@ -73,7 +73,7 @@ async def get_reports(org:str):
                             ,  count(e.test_value) [evaluation]
                         FROM air_turquoise_reports r  
                         LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
-                        LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
+                        LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name                       
                         GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link], p.weight_min, p.weight_max
                         --HAVING  r.[report_link] IS NULL OR r.[download_link] IS NULL OR count(e.test_value)=0
                         ORDER BY [report_date] DESC
@@ -111,10 +111,10 @@ async def get_evaluation(org:str, item_name:str):
         return df
 
 
-async def get_evaluations(org:str):
+async def get_evaluations(org:str,item_name:str, weight: str):
         if org != 'air-turquoise':
             return DataFrame()
-
+        w = int(weight) if weight and weight.isdecimal() else 0
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {}
@@ -122,7 +122,7 @@ async def get_evaluations(org:str):
                         SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, e.test_value
                         FROM air_turquoise_evaluation e 
                         LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
-
+                        WHERE (e.item_name like '%{item_name}%' ) AND ({w}=0 OR ({w} >= IFNULL(p.weight_min,0) and {w} <= IFNULL(p.weight_max,0)))
                     """), db, params=param)
         return df
 
