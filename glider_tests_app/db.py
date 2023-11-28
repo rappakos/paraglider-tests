@@ -137,6 +137,37 @@ async def save_evaluation(org:str, evaluation):
     else:
         print("not implemented yet")     
 
+async def save_parameters(org:str, params):
+    if org=='air-turquoise':
+        async with aiosqlite.connect(DB_NAME) as db:
+            #print(params)
+            res = await db.execute_insert("""
+                                INSERT OR IGNORE INTO air_turquoise_parameters ( 
+                                        item_name ,
+                                        testpilots ,
+                                        harnesses ,
+                                        depth_min ,
+                                        depth_max ,
+                                        width_min ,
+                                        width_max ,
+                                        weight_min ,
+                                        weight_max)
+                                SELECT 
+                                        :item_name ,
+                                        :testpilots ,
+                                        :harnesses ,
+                                        :depth_min ,
+                                        :depth_max ,
+                                        :width_min ,
+                                        :width_max ,
+                                        :weight_min ,
+                                        :weight_max                            
+                            """, params)
+                #print(res)
+            await db.commit()        
+    else:
+        print("not implemented yet")     
+
 
 async def get_open_evaluations(org:str):
     if org != 'air-turquoise':

@@ -65,6 +65,9 @@ async def item_details(request):
                 if not evaluation.empty:
                     params = await airturquoise_loader.extract_param_data(item.item_name, fname)
                     print(params)
+                    if params:
+                        await db.save_parameters(org, params)
+
                     #print('from db')
                     #print(evaluation.head())
                     textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]

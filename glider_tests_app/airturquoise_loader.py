@@ -145,7 +145,7 @@ async def extract_textrows(item_name:str, filename:str):
 def filter_parameters(item_name:str, textrows):
     import re
 
-    results= {}
+    results= {'item_name':item_name}
     for i,pattern in enumerate(TEST_PARAMS_TEMPLATE):
         rowindex = 0
         for j,row in enumerate(textrows[rowindex:]):

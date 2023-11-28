@@ -18,3 +18,17 @@ CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
  );
 
  --DELETE FROM air_turquoise_evaluation;
+
+ CREATE TABLE IF NOT EXISTS air_turquoise_parameters (
+        item_name TEXT NOT NULL,
+        testpilots TEXT NOT NULL,
+        harnesses TEXT NOT NULL,
+        depth_min INT NOT NULL,
+        depth_max INT NOT NULL,
+        width_min INT NOT NULL,
+        width_max INT NOT NULL,
+        weight_min INT NOT NULL,
+        weight_max INT NOT NULL,
+        FOREIGN KEY(item_name) REFERENCES air_turquoise_reports(item_name),
+        UNIQUE (item_name)
+ );
