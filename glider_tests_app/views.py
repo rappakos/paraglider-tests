@@ -60,20 +60,24 @@ async def item_details(request):
         if not report.empty:
             for item in report.itertuples(index=None):
                 evaluation = await db.get_evaluation(org, item.item_name)
+                fname = get_filename(item.item_name)
                 #print(evaluation)
                 if not evaluation.empty:
+                    params = await airturquoise_loader.extract_param_data(item.item_name, fname)
+                    print(params)
                     #print('from db')
                     #print(evaluation.head())
                     textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
                 else:
-                    fname = get_filename(item.item_name)
-                    #print(fname)
                     evaluation = await airturquoise_loader.extract_pdf_data(item.item_name, fname)
                     #print('from pdf')          
                     #print(evaluation.head())
                     if evaluation is not None:
                         textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
                         await db.save_evaluation(org, evaluation)
+
+                #temp = await airturquoise_loader.extract_textrows(item.item_name, fname)
+                #print(temp)
                     
         return {
             'id': item_id,

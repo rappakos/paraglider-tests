@@ -11,6 +11,14 @@ AIR_TURQUOISE_PAGE_SIZE=25
 AIR_TURQUISE_BASE_URL = 'https://para-test.com'
 AIR_TURQUISE_TEST_URL = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
 
+TEST_PARAMS_TEMPLATE = [
+    '(?:Test pilot)\s(?P<testpilots>\w+(\s+\w+)*)',
+    '(?:Harness)\s(?P<harnesses>\w+(\s+[-\w]+)*)',
+    '(?:Harness to risers distance \(cm\))\s(?P<depth_min>\d{2,3})\s(?P<depth_max>\d{2,3})',
+    '(?:Distance between risers \(cm\))\s(?P<width_min>\d{2,3})\s(?P<width_max>\d{2,3})', 
+    '(?:Total weight in flight \(kg\))\s(?P<weight_min>\d{2,3})\s(?P<weight_max>\d{2,3})'
+]
+
 TEXT_DATA_TEMPLATE = [
  'Test Report generated automatically(.+)(?P<test>1. Inflation/Take-off) (?P<rating>[A-D])',
  '(?P<test>2. Landing) (?P<rating>[A-D])',
@@ -115,21 +123,51 @@ async def get_download_link(link:str):
     return None
 
 async def extract_pdf_data(item_name:str, filename:str):
+    textrows = await extract_textrows(item_name, filename)
+
+    return pd.DataFrame(filter_evaluations(item_name, textrows))
+
+async def extract_param_data(item_name:str, filename:str):
+    textrows = await extract_textrows(item_name, filename)
+
+    return filter_parameters(item_name, textrows)
+
+async def extract_textrows(item_name:str, filename:str):
     textrows = []
     reader = PdfReader(filename)
     for page in reader.pages:
         lines = page.extract_text().split('\n')
         textrows.extend(lines)
+    
+    return textrows
 
-    return pd.DataFrame(filtered(item_name, textrows))
 
+def filter_parameters(item_name:str, textrows):
+    import re
 
-def filtered(item_name:str, textrows):
+    results= {}
+    for i,pattern in enumerate(TEST_PARAMS_TEMPLATE):
+        rowindex = 0
+        for j,row in enumerate(textrows[rowindex:]):
+            #print(pattern,row)
+            m = re.match(pattern,row)
+            if m:
+                #print(m.groupdict())
+                # results = results | m.groupdict() # PY >= 3.9
+                results = {**results, **m.groupdict()}
+                rowindex += j
+                break
+        #if i==1 and rowindex==0:
+        #    print("there was no match for the first entry")
+        #    break
+
+    return results
+
+def filter_evaluations(item_name:str, textrows):
     import re
 
     results= []
     for i,pattern in enumerate(TEXT_DATA_TEMPLATE):
-
         rowindex = 0
         for j,row in enumerate(textrows[rowindex:]):
             if "\n" in pattern:

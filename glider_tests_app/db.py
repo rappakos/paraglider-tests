@@ -73,7 +73,7 @@ async def get_reports(org:str):
                         FROM air_turquoise_reports r  
                         LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
                         GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
-                        HAVING  r.[report_link] IS NULL OR r.[download_link] IS NULL OR count(e.test_value)=0
+                        --HAVING  r.[report_link] IS NULL OR r.[download_link] IS NULL OR count(e.test_value)=0
                         ORDER BY [report_date] DESC
                         LIMIT 500
                     """), db, params=param)
