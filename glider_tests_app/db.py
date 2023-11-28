@@ -69,10 +69,12 @@ async def get_reports(org:str):
             param = {}
             df  = pd.read_sql_query(text(f"""
                         SELECT r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
+                            , p.weight_min, p.weight_max
                             ,  count(e.test_value) [evaluation]
                         FROM air_turquoise_reports r  
                         LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
-                        GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
+                        LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
+                        GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link], p.weight_min, p.weight_max
                         --HAVING  r.[report_link] IS NULL OR r.[download_link] IS NULL OR count(e.test_value)=0
                         ORDER BY [report_date] DESC
                         LIMIT 500
@@ -117,8 +119,10 @@ async def get_evaluations(org:str):
         with engine.connect() as db:
             param = {}
             df  = read_sql_query(text(f"""
-                        SELECT e.[item_name], e.test_name, e.test_value
+                        SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, e.test_value
                         FROM air_turquoise_evaluation e 
+                        LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
+
                     """), db, params=param)
         return df
 

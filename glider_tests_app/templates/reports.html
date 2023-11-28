@@ -33,6 +33,7 @@
             <th>Report date</th>
             <th>Item name</th>
             <th>Class</th>
+            <th>Weight range (kg)</th>
             <th>Download link</th>
             <th>PDF?</th>
             <th>Ratings?</th>
@@ -42,6 +43,7 @@
             <td>{{report.report_date}}</td>
             <td><a href='/{{org}}{{report.report_link}}' > {{report.item_name}}</a></td>
             <td>{{report.report_class}}</td>
+            <td>{{report.weight_min|int}} - {{report.weight_max|int}} </td>
             <td>{{'-' if report.download_link is none else 'ok'}}</td>
             <!-- <td>{{report.download_link}}</td> -->
             <td>{{report.pdf_available}}</td>
