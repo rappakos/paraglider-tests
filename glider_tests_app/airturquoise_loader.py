@@ -39,11 +39,36 @@ TEXT_DATA_TEMPLATE = [
  '(?P<test>8. Stability in gentle spirals) (?P<rating>[A-D])',
  '(?P<test>9. Behaviour exiting a fully developed spiral dive) (?P<rating>[A-D])',
  '(?P<test>10. Symmetric front collapse) (?P<rating>[A-D])',
- '(?P<test>11. Exiting deep stall \(parachutal stall\)) (?P<rating>[A-D])',
+ '(?P<test>11. Exiting deep stall \(parachutal stall\)) (?P<rating>[0A-D])', # 0: not available?
  '(?P<test>12. High angle of attack recovery) (?P<rating>[A-D])',
  '(?P<test>13. Recovery from a developed full stall) (?P<rating>[A-D])',
  '(?P<test>14. Asymmetric collapse) (?P<rating>[A-D])',
  '(?P<test>15. Directional control with a maintained asymmetric\ncollapse)(?P<rating>[A-D])', # multiline!
+ '(?P<test>16. Trim speed spin tendency) (?P<rating>[A-D])',
+ '(?P<test>17. Low speed spin tendency) (?P<rating>[A-D])',
+ '(?P<test>18. Recovery from a developed spin) (?P<rating>[A-D])',
+ '(?P<test>19. B-line stall) (?P<rating>[0A-D])', # 0: not available
+ '(?P<test>20. Big ears) (?P<rating>[A-D])',
+ '(?P<test>21. Big ears in accelerated flight) (?P<rating>[A-D])',
+ '(?P<test>22. Alternative means of directional control) (?P<rating>[A-D])',
+]
+
+TEXT_DATA_OCR_TEMPLATE = [
+ '(?P<test>1. Inflation/Take-off) (?P<rating>[a-dA-D])',
+ '(?P<test>2. Landing) (?P<rating>[A-D])',
+ '(?P<test>3. Speed in straight flight) (?P<rating>[A-D])',
+ '(?P<test>4. Control movement) (?P<rating>[A-D])',
+ '(?P<test>5. Pitch stability exiting accelerated flight) (?P<rating>[A-D])',
+ '(?P<test>6. Pitch stability operating controls during(?: accelerated)?) (?P<rating>[A-D])', #  multiline!
+ '(?P<test>7. Roll stability and damping) (?P<rating>[A-D])',
+ '(?P<test>8. Stability in gentle spirals) (?P<rating>[A-D])',
+ '(?P<test>9. Behaviour exiting a fully developed spiral dive) (?P<rating>[A-D])',
+ '(?P<test>10. Symmetric front collapse) (?P<rating>[A-D])',
+ '(?P<test>11. Exiting deep stall \(parachutal stall\)) (?P<rating>[A-D])',
+ '(?P<test>12. High angle of attack recovery) (?P<rating>[A-D])',
+ '(?P<test>13. Recovery from a developed full stall) (?P<rating>[A-D])',
+ '(?P<test>14. Asymmetric collapse) (?P<rating>[A-D])',
+ '(?P<test>15. Directional control with a maintained(?: asymmetric)?) (?P<rating>[A-D])', # multiline!
  '(?P<test>16. Trim speed spin tendency) (?P<rating>[A-D])',
  '(?P<test>17. Low speed spin tendency) (?P<rating>[A-D])',
  '(?P<test>18. Recovery from a developed spin) (?P<rating>[A-D])',
@@ -165,11 +190,12 @@ async def extract_ocr_data(item_name:str, filename:str):
             failed = False
             continue
 
+    #print(textrows)
     if not failed:
         params = filter_parameters(item_name, textrows, from_ocr=True)
         print(params)
-        #evaluations = filter_evaluations(item_name, textrows, from_ocr=True)
-        #print(evaluations)
+        evaluations = filter_evaluations(item_name, textrows, from_ocr=True)
+        print(evaluations)
 
     return textrows
 
@@ -210,8 +236,9 @@ def filter_evaluations(item_name:str, textrows, from_ocr=False):
     import re
 
     results= []
-    for i,pattern in enumerate(TEXT_DATA_TEMPLATE):
-        rowindex = 0
+    templates= TEXT_DATA_OCR_TEMPLATE if from_ocr else TEXT_DATA_TEMPLATE
+    for i,pattern in enumerate(templates):
+        rowindex, success = 0, False
         for j,row in enumerate(textrows[rowindex:]):
             if "\n" in pattern:
                 doublerow = f"{row}\n{textrows[rowindex+j+1]}"
@@ -221,14 +248,18 @@ def filter_evaluations(item_name:str, textrows, from_ocr=False):
             if m:
                 test,rating = m.group('test'), m.group('rating')
                 rowindex += j
+                success = True
                 results.append({'item_name':item_name, 'test':test, 'rating': rating})
                 break
+        if not success:
+            print(f"!!! Test {i+1} - {pattern} failed")
         if i==1 and rowindex==0:
             print("there was no match for the first entry")
             break
     #print(len(TEXT_DATA_TEMPLATE),len(results))
     #assert(len(results)==0 or len(results)==len(TEXT_DATA_TEMPLATE))
-    if len(results)==len(TEXT_DATA_TEMPLATE):
+    #print(results)
+    if len(results)==len(templates):
         return results 
     else: 
         return None
