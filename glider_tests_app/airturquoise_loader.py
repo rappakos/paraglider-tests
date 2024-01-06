@@ -55,27 +55,27 @@ TEXT_DATA_TEMPLATE = [
 
 TEXT_DATA_OCR_TEMPLATE = [
  '(?P<test>1. Inflation/Take-off) (?P<rating>[a-dA-D])',
- '(?P<test>2. Landing) (?P<rating>[A-D])',
- '(?P<test>3. Speed in straight flight) (?P<rating>[A-D])',
- '(?P<test>4. Control movement) (?P<rating>[A-D])',
- '(?P<test>5. Pitch stability exiting accelerated flight) (?P<rating>[A-D])',
- '(?P<test>6. Pitch stability operating controls during(?: accelerated)?) (?P<rating>[A-D])', #  multiline!
- '(?P<test>7. Roll stability and damping) (?P<rating>[A-D])',
- '(?P<test>8. Stability in gentle spirals) (?P<rating>[A-D])',
- '(?P<test>9. Behaviour exiting a fully developed spiral dive) (?P<rating>[A-D])',
- '(?P<test>10. Symmetric front collapse) (?P<rating>[A-D])',
- '(?P<test>11. Exiting deep stall \(parachutal stall\)) (?P<rating>[A-D])',
- '(?P<test>12. High angle of attack recovery) (?P<rating>[A-D])',
- '(?P<test>13. Recovery from a developed full stall) (?P<rating>[A-D])',
- '(?P<test>14. Asymmetric collapse) (?P<rating>[A-D])',
- '(?P<test>15. Directional control with a maintained(?: asymmetric)?) (?P<rating>[A-D])', # multiline!
- '(?P<test>16. Trim speed spin tendency) (?P<rating>[A-D])',
- '(?P<test>17. Low speed spin tendency) (?P<rating>[A-D])',
- '(?P<test>18. Recovery from a developed spin) (?P<rating>[A-D])',
- '(?P<test>19. B-line stall) (?P<rating>[0A-D])', # 0: not available
- '(?P<test>20. Big ears) (?P<rating>[A-D])',
- '(?P<test>21. Big ears in accelerated flight) (?P<rating>[A-D])',
- '(?P<test>22. Alternative means of directional control) (?P<rating>[A-D])',
+ '(?P<test>2. Landing) (?P<rating>[a-dA-D])',
+ '(?P<test>3. Speed in straight flight) (?P<rating>[a-dA-D])',
+ '(?P<test>4. Control movement) (?P<rating>[a-dA-D])',
+ '(?P<test>5. Pitch stability exiting accelerated flight) (?P<rating>[0a-dA-D])',
+ '(?P<test>6. Pitch stability operating controls during(?: accelerated)?) (?P<rating>[0a-dA-D])', #  multiline!
+ '(?P<test>7. Roll stability and damping) (?P<rating>[a-dA-D])',
+ '(?P<test>8. Stability in gentle spirals) (?P<rating>[a-dA-D])',
+ '(?P<test>9. Behaviour exiting a fully developed spiral dive) (?P<rating>[a-dA-D])',
+ '(?P<test>10. Symmetric front collapse) (?P<rating>[a-dA-D])',
+ '(?P<test>11. Exiting deep stall \(parachutal stall\)) (?P<rating>[a-dA-D])',
+ '(?P<test>12. High angle of attack recovery) (?P<rating>[a-dA-D])',
+ '(?P<test>13. Recovery from a developed full stall) (?P<rating>[a-dA-D])',
+ '(?P<test>14. Asymmetric collapse) (?P<rating>[a-dA-D])',
+ '(?P<test>15. Directional control with a maintained(?: asymmetric)?) (?P<rating>[a-dA-D])', # multiline!
+ '(?P<test>16. Trim speed spin tendency) (?P<rating>[a-dA-D])',
+ '(?P<test>17. Low speed spin tendency) (?P<rating>[a-dA-D])',
+ '(?P<test>18. Recovery from a developed spin) (?P<rating>[a-dA-D])',
+ '(?P<test>19. B-line stall) (?P<rating>[0a-dA-D])', # 0: not available
+ '(?P<test>20. Big ears) (?P<rating>[a-dA-D])',
+ '(?P<test>21. Big ears in accelerated flight) (?P<rating>[0a-dA-D])',
+ '(?P<test>22. Alternative means of directional control) (?P<rating>[a-dA-D])',
 ]
 
 
@@ -190,14 +190,15 @@ async def extract_ocr_data(item_name:str, filename:str):
             failed = False
             continue
 
-    #print(textrows)
+    print(textrows)
     if not failed:
         params = filter_parameters(item_name, textrows, from_ocr=True)
-        print(params)
+        #print(params)
         evaluations = filter_evaluations(item_name, textrows, from_ocr=True)
-        print(evaluations)
-
-    return textrows
+        #print(evaluations)
+        return params, pd.DataFrame(evaluations)
+    else:
+        return None,  pd.DataFrame()
 
 
 async def extract_textrows(item_name:str, filename:str):
