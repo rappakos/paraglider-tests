@@ -259,6 +259,12 @@ def filter_evaluations(item_name:str, textrows, from_ocr=False):
                 break
         if not success:
             print(f"!!! Test {i+1} - {pattern} failed")
+            if from_ocr and i+1 in [11,13]:
+                test_name = {
+                                11:'11. Exiting deep stall (parachutal stall)',
+                                13:'13. Recovery from a developed full stall'
+                            }
+                results.append({'item_name':item_name, 'test':test_name[i+1], 'rating': 0})
         if i==1 and rowindex==0:
             print("there was no match for the first entry")
             break
