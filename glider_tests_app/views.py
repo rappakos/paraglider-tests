@@ -135,8 +135,10 @@ async def load_reports(request):
     if request.method == 'POST':
         if org=='air-turquoise':
             # check if there are new entries
-            for classification in ['B','C']:
+            for classification in ['A','B','C']:
                 start_date = await db.get_start_date(org,classification)
+                if start_date is None:
+                    start_date = '2020-01-01'
                 print(classification,start_date)
 
                 pages = await airturquoise_loader.get_reports(classification,start_date)

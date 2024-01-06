@@ -236,7 +236,7 @@ async def get_download_links(org:str):
                         FROM air_turquoise_reports r 
                         WHERE r.[download_link] is not null 
                         ORDER BY r.[report_date] DESC
-                        LIMIT 500 -- test
+                        LIMIT 1000 -- test
                     """), db, params=param)
         return df      
 
