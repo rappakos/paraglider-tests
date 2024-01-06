@@ -187,6 +187,9 @@ async def extract_ocr_data(item_name:str, filename:str):
             hack = '21. Big ears in accelerated flight E . -'
             if hack in lines:
                 lines[lines.index(hack)] = '21. Big ears in accelerated flight B'
+            hack = 'Harness to risers distance (cm) M1 43'
+            if hack in lines:
+                lines[lines.index(hack)] = 'Harness to risers distance (cm) 41 43'
 
             textrows.extend(lines)
 
