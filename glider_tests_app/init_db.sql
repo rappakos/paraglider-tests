@@ -32,3 +32,13 @@ CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
         FOREIGN KEY(item_name) REFERENCES air_turquoise_reports(item_name),
         UNIQUE (item_name)
  );
+
+update air_turquoise_evaluation 
+ set test_name = '6. Pitch stability operating controls during'
+ where test_name like '6. Pitch stability operating controls during%'
+       and not test_name = '6. Pitch stability operating controls during';
+
+update air_turquoise_evaluation 
+ set test_name = '15. Directional control with a maintained'
+ where test_name like '15. Directional control with a maintained%'
+       and not test_name = '15. Directional control with a maintained';
