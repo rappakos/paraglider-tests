@@ -19,6 +19,15 @@ TEST_PARAMS_TEMPLATE = [
     '(?:Total weight in flight \(kg\))\s(?P<weight_min>\d{2,3})\s(?P<weight_max>\d{2,3})'
 ]
 
+TEST_PARAMS_OCR_TEMPLATE = [
+    '(?:Test pilot)\s(?P<testpilots>\w+(\s+\w+)*)',
+    '(?:Harness)\s(?P<harnesses>\w+(\s+[-\w]+)*)',
+    '(?:Harness to risers distance(?: \(cm\))?)\s(?P<depth_min>\d{2,3})\s(?P<depth_max>\d{2,3})', 
+    '(?:(?:\(cm\) )?Distance between risers(?: \(cm\))?)\s(?P<width_min>\d{2,3})\s(?P<width_max>\d{2,3})', # \(cm\) may be  somewere?
+    '(?:(?:\(cm\) )?Total weight in flight(?: \(kg\))?)\s(?P<weight_min>\d{2,3})\s(?P<weight_max>\d{2,3})'
+]
+
+
 TEXT_DATA_TEMPLATE = [
  'Test Report generated automatically(.+)(?P<test>1. Inflation/Take-off) (?P<rating>[A-D])',
  '(?P<test>2. Landing) (?P<rating>[A-D])',
@@ -139,15 +148,30 @@ async def extract_ocr_data(item_name:str, filename:str):
     import pytesseract
 
     pytesseract.pytesseract.tesseract_cmd = os.getenv('tesseract_cmd')
+    #print(pytesseract.pytesseract.tesseract_cmd)
 
+    textrows, failed = [], False
     pdf_file = convert_from_bytes(open(filename, 'rb').read())
     for (i,page) in enumerate(pdf_file) :
+        #print(i, page)
         try:
-            text = pytesseract.image_to_string(page)
-            print(text)
+            text = pytesseract.image_to_string(page,config='--psm 4')
+            #print(text)
+            lines = text.split('\n')            
+            textrows.extend(lines)
+
         except Exception as x:
             print(f"page {i} failed {x}")
+            failed = False
             continue
+
+    if not failed:
+        params = filter_parameters(item_name, textrows, from_ocr=True)
+        print(params)
+        #evaluations = filter_evaluations(item_name, textrows, from_ocr=True)
+        #print(evaluations)
+
+    return textrows
 
 
 async def extract_textrows(item_name:str, filename:str):
@@ -160,11 +184,12 @@ async def extract_textrows(item_name:str, filename:str):
     return textrows
 
 
-def filter_parameters(item_name:str, textrows):
+def filter_parameters(item_name:str, textrows, from_ocr=False):
     import re
 
     results= {'item_name':item_name}
-    for i,pattern in enumerate(TEST_PARAMS_TEMPLATE):
+    templates = TEST_PARAMS_OCR_TEMPLATE if from_ocr else TEST_PARAMS_TEMPLATE
+    for i,pattern in enumerate(templates):
         rowindex = 0
         for j,row in enumerate(textrows[rowindex:]):
             #print(pattern,row)
@@ -181,7 +206,7 @@ def filter_parameters(item_name:str, textrows):
 
     return results
 
-def filter_evaluations(item_name:str, textrows):
+def filter_evaluations(item_name:str, textrows, from_ocr=False):
     import re
 
     results= []

@@ -75,11 +75,13 @@ async def item_details(request):
                     evaluation = await airturquoise_loader.extract_pdf_data(item.item_name, fname)
                     #print('from pdf')          
                     #print(evaluation.head())
-                    if evaluation is not None:
+                    if not evaluation.empty:
                         textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
                         await db.save_evaluation(org, evaluation)
-                    
-                    check = await airturquoise_loader.extract_ocr_data(item.item_name, fname)
+                    else:
+                        print('try ocr ')
+                        check = await airturquoise_loader.extract_ocr_data(item.item_name, fname)
+                        #print(check)
 
                 #temp = await airturquoise_loader.extract_textrows(item.item_name, fname)
                 #print(temp)
