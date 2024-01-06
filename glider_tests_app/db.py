@@ -75,7 +75,7 @@ async def get_reports(org:str):
                         LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
                         LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name                       
                         GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link], p.weight_min, p.weight_max
-                        --HAVING  r.[report_link] IS NULL OR r.[download_link] IS NULL OR count(e.test_value)=0
+                        HAVING  r.[report_link] IS NULL /*OR r.[download_link] IS NULL*/ OR count(e.test_value)=0 or p.item_name is null
                         ORDER BY [report_date] DESC
                         LIMIT 500
                     """), db, params=param)
@@ -217,6 +217,7 @@ async def get_open_reports(org:str):
                         SELECT [item_name], [report_link]
                         FROM air_turquoise_reports r 
                         WHERE [download_link] is null 
+                            and [item_name] not like '%sting%rs%'
                         ORDER BY [report_date] DESC
                         LIMIT 20 -- test
                     """), db, params=param)
@@ -235,7 +236,7 @@ async def get_download_links(org:str):
                         FROM air_turquoise_reports r 
                         WHERE r.[download_link] is not null 
                         ORDER BY r.[report_date] DESC
-                        LIMIT 250 -- test
+                        LIMIT 500 -- test
                     """), db, params=param)
         return df      
 
