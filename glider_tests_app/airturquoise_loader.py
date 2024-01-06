@@ -182,7 +182,12 @@ async def extract_ocr_data(item_name:str, filename:str):
         try:
             text = pytesseract.image_to_string(page,config='--psm 4')
             #print(text)
-            lines = text.split('\n')            
+            lines = text.split('\n')
+            # hacks
+            hack = '21. Big ears in accelerated flight E . -'
+            if hack in lines:
+                lines[lines.index(hack)] = '21. Big ears in accelerated flight B'
+
             textrows.extend(lines)
 
         except Exception as x:
