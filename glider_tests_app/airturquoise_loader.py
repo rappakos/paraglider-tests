@@ -33,8 +33,8 @@ TEXT_DATA_TEMPLATE = [
  '(?P<test>2. Landing) (?P<rating>[A-D])',
  '(?P<test>3. Speed in straight flight) (?P<rating>[A-D])',
  '(?P<test>4. Control movement) (?P<rating>[A-D])',
- '(?P<test>5. Pitch stability exiting accelerated flight) (?P<rating>[A-D])',
- '(?P<test>6. Pitch stability operating controls during accelerated\nflight)(?P<rating>[A-D])', #  multiline!
+ '(?P<test>5. Pitch stability exiting accelerated flight) (?P<rating>[0A-D])',
+ '(?P<test>6. Pitch stability operating controls during accelerated\nflight)(?P<rating>[0A-D])', #  multiline!
  '(?P<test>7. Roll stability and damping) (?P<rating>[A-D])',
  '(?P<test>8. Stability in gentle spirals) (?P<rating>[A-D])',
  '(?P<test>9. Behaviour exiting a fully developed spiral dive) (?P<rating>[A-D])',
@@ -49,7 +49,7 @@ TEXT_DATA_TEMPLATE = [
  '(?P<test>18. Recovery from a developed spin) (?P<rating>[A-D])',
  '(?P<test>19. B-line stall) (?P<rating>[0A-D])', # 0: not available
  '(?P<test>20. Big ears) (?P<rating>[A-D])',
- '(?P<test>21. Big ears in accelerated flight) (?P<rating>[A-D])',
+ '(?P<test>21. Big ears in accelerated flight) (?P<rating>[0A-D])',
  '(?P<test>22. Alternative means of directional control) (?P<rating>[A-D])',
 ]
 
