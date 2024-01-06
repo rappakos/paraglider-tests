@@ -132,6 +132,24 @@ async def extract_param_data(item_name:str, filename:str):
 
     return filter_parameters(item_name, textrows)
 
+async def extract_ocr_data(item_name:str, filename:str):
+    import os
+    from PIL import Image
+    from pdf2image import convert_from_bytes
+    import pytesseract
+
+    pytesseract.pytesseract.tesseract_cmd = os.getenv('tesseract_cmd')
+
+    pdf_file = convert_from_bytes(open(filename, 'rb').read())
+    for (i,page) in enumerate(pdf_file) :
+        try:
+            text = pytesseract.image_to_string(page)
+            print(text)
+        except Exception as x:
+            print(f"page {i} failed {x}")
+            continue
+
+
 async def extract_textrows(item_name:str, filename:str):
     textrows = []
     reader = PdfReader(filename)

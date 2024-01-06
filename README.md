@@ -5,7 +5,9 @@
 
 
 
+## Tessaract 
 
+Add `tesseract_cmd` with path to the exe to a `.env` file.
 
 
 

@@ -78,6 +78,8 @@ async def item_details(request):
                     if evaluation is not None:
                         textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
                         await db.save_evaluation(org, evaluation)
+                    
+                    check = await airturquoise_loader.extract_ocr_data(item.item_name, fname)
 
                 #temp = await airturquoise_loader.extract_textrows(item.item_name, fname)
                 #print(temp)
