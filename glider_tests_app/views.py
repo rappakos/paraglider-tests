@@ -80,8 +80,12 @@ async def item_details(request):
                         await db.save_evaluation(org, evaluation)
                     else:
                         print('try ocr ')
-                        check = await airturquoise_loader.extract_ocr_data(item.item_name, fname)
-                        #print(check)
+                        params, evaluation = await airturquoise_loader.extract_ocr_data(item.item_name, fname)
+                        if params:
+                            await db.save_parameters(org, params)
+                        if not evaluation.empty:
+                            textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
+                            await db.save_evaluation(org, evaluation)
 
                 #temp = await airturquoise_loader.extract_textrows(item.item_name, fname)
                 #print(temp)
