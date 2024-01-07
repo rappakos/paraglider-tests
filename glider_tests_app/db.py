@@ -66,8 +66,9 @@ async def get_stats():
                             , count(distinct r.[item_name]) [item_count]
                             , max(r.[report_date]) [max_date]
                             , min(r.[report_date]) [min_date]
-                            , 0 [eval_count]
+                            , count(distinct e.[item_name]) [eval_count]
                         FROM dhv_reports r
+                        LEFT JOIN dhv_evaluation e ON e.[item_name]=r.[item_name]
                         GROUP BY [report_class]         
                         ORDER BY  [org], [report_class]  
                     """), db, params=param)
@@ -102,10 +103,13 @@ def _get_reports_query(org:str):
     if org== 'dhv':
         return """
                 SELECT r.[report_date], r.[item_name], r.[report_link], r.[report_class]
-                    , 0 [evaluation]
-                FROM dhv_reports r                   
-                --GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class]
-                --HAVING  r.[report_link] IS NULL 
+                    , p.weight_min, p.weight_max
+                    ,  count(e.test_value) [evaluation]
+                FROM dhv_reports r
+                LEFT JOIN dhv_evaluation e ON e.[item_name]=r.[item_name] 
+                LEFT JOIN dhv_parameters p ON p.item_name=e.item_name       
+                GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class]
+                HAVING  r.[report_link] IS NULL OR count(e.test_value)=0 or p.item_name is null
                 ORDER BY [report_date] DESC
                 LIMIT 500
                 """ 
