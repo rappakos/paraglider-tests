@@ -75,40 +75,70 @@ async def get_stats():
 
 async def get_reports(org:str):
         import pandas as pd
-        if org != 'air-turquoise':
+        if org not in ['dhv','air-turquoise']:
             return pd.DataFrame()
 
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {}
-            df  = pd.read_sql_query(text(f"""
-                        SELECT r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
-                            , p.weight_min, p.weight_max
-                            ,  count(e.test_value) [evaluation]
-                        FROM air_turquoise_reports r  
-                        LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
-                        LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name                       
-                        GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link], p.weight_min, p.weight_max
-                        HAVING  r.[report_link] IS NULL /*OR r.[download_link] IS NULL*/ OR count(e.test_value)=0 or p.item_name is null
-                        ORDER BY [report_date] DESC
-                        LIMIT 500
-                    """), db, params=param)
+            query = _get_reports_query(org)
+            df  = pd.read_sql_query(text(query), db, params=param)
         return df
+
+def _get_reports_query(org:str):
+    if org == 'air-turquoise':
+        return """
+                SELECT r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link]
+                    , p.weight_min, p.weight_max
+                    ,  count(e.test_value) [evaluation]
+                FROM air_turquoise_reports r  
+                LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
+                LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name                       
+                GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class], r.[download_link], p.weight_min, p.weight_max
+                HAVING  r.[report_link] IS NULL /*OR r.[download_link] IS NULL*/ OR count(e.test_value)=0 or p.item_name is null
+                ORDER BY [report_date] DESC
+                LIMIT 500
+                """
+    if org== 'dhv':
+        return """
+                SELECT r.[report_date], r.[item_name], r.[report_link], r.[report_class]
+                    , 0 [evaluation]
+                FROM dhv_reports r                   
+                --GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class]
+                --HAVING  r.[report_link] IS NULL 
+                ORDER BY [report_date] DESC
+                LIMIT 500
+                """ 
+    
+    return ""
+
 
 async def get_report_details(org:str, item_id:str):
         import pandas as pd
-        if org != 'air-turquoise':
-            return pd.DataFrame()
+        if org == 'air-turquoise':
+            engine = create_engine(f'sqlite:///{DB_NAME}')
+            with engine.connect() as db:
+                param = {}
+                df  = pd.read_sql_query(text(f"""
+                            SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
+                            FROM air_turquoise_reports r  
+                            WHERE r.[report_link] = '/reports/item/{item_id}'
+                        """), db, params=param)
+            return df
+        if org == 'dhv':
+            engine = create_engine(f'sqlite:///{DB_NAME}')
+            with engine.connect() as db:
+                param = {'item_id':item_id}
+                df  = pd.read_sql_query(text(f"""
+                            SELECT [report_date], [item_name], [report_link], [report_class]
+                            FROM dhv_reports r  
+                            WHERE replace(lower(r.[item_name]),' ','-') = :item_id
+                        """), db, params=param)
+            return df        
+        
+        
 
-        engine = create_engine(f'sqlite:///{DB_NAME}')
-        with engine.connect() as db:
-            param = {}
-            df  = pd.read_sql_query(text(f"""
-                        SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
-                        FROM air_turquoise_reports r  
-                        WHERE r.[report_link] = '/reports/item/{item_id}'
-                    """), db, params=param)
-        return df
+        return pd.DataFrame()
 
 async def get_evaluation(org:str, item_name:str):
         if org != 'air-turquoise':

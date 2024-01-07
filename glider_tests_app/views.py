@@ -39,6 +39,7 @@ async def reports(request):
         if not reports.empty:
             reports['pdf_available'] = reports.apply(lambda row: exists(get_filename(row.item_name)) , axis=1)
             #reports['eval_available'] = reports.apply(lambda x: True if x.evaluation==1 else False , axis=1)
+            reports['item_id'] = reports.apply(lambda row: '/reports/item/' + '-'.join(row.item_name.lower().split(' ')) if org=='dhv' else row.report_link  , axis=1)
 
         #evaluations = await db.get_evaluations(org)
         #print(evaluations.head())
@@ -59,7 +60,7 @@ async def item_details(request):
         report = await db.get_report_details(org, item_id)
         #print(report.head())
         textrows = []
-        if not report.empty:
+        if not report.empty and org=='air-turqouise':
             for item in report.itertuples(index=None):
                 evaluation = await db.get_evaluation(org, item.item_name)
                 fname = get_filename(item.item_name)
