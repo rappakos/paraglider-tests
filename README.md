@@ -7,6 +7,14 @@ Tool to easily get new certification data and compare gliders.
 
  A,B,C certification tests by DHV or Air Turquoise starting with test dates around 2020-01-01.
 
+###  Air Turquoise
+
+ Air Turquoise provides data over PDF links, most of which can be processed relatively easily. Some files have broken text content that need some additional tricks.
+
+### DHV
+
+The DHV test reports are available as HTML, which can be extracted using standard tools.
+
 
 ## Home - summary of the data
 
