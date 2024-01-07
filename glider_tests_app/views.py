@@ -150,9 +150,8 @@ async def load_reports(request):
                         await db.save_tests(org, page)
                 if org=='dhv':
                     pages = await dhv_loader.get_reports(classification,start_date)
-                    print(pages)
-
-
+                    for page in pages:
+                        await db.save_tests(org, page)
 
 
         raise redirect(request.app.router, 'reports', org=org)

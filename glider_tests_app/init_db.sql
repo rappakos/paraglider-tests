@@ -9,6 +9,13 @@ CREATE TABLE IF NOT EXISTS air_turquoise_reports
                report_class TEXT,
                UNIQUE (item_name COLLATE NOCASE));
 
+CREATE TABLE IF NOT EXISTS dhv_reports
+               (report_date TEXT NOT NULL, 
+               item_name TEXT PRIMARY KEY, 
+               report_link TEXT, 
+               report_class TEXT,
+               UNIQUE (item_name COLLATE NOCASE));
+
 CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
         item_name TEXT NOT NULL,
         test_name TEXT NOT NULL,

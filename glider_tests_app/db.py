@@ -24,18 +24,22 @@ async def setup_db(app):
 
 async def get_start_date(org:str, classification: str):
         import pandas as pd
-        if org != 'air-turquoise':
+        if org not in ['dhv','air-turquoise']:
             return START_DATE
+
+        QUERY = """ SELECT  MAX([report_date]) [report_date]
+                        FROM dhv_reports r  
+                        WHERE [report_class]= :classification
+                    """ if org=='dhv' else """ SELECT  MAX([report_date]) [report_date]
+                        FROM air_turquoise_reports r  
+                        WHERE [report_class]= :classification
+                    """ 
 
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {'classification':classification}
             #print(param)
-            df  = pd.read_sql_query(text(f"""
-                        SELECT  MAX([report_date]) [report_date]
-                        FROM air_turquoise_reports r  
-                        WHERE [report_class]= :classification
-                    """), db, params=param)
+            df  = pd.read_sql_query(text(QUERY), db, params=param)
         return max(df['report_date'])
 
 async def get_stats():
@@ -196,6 +200,8 @@ async def get_open_evaluations(org:str):
 async def save_tests(org:str, page:DataFrame):
     if org=='air-turquoise':
         await _save_air_turquoise_tests(page)
+    elif org=='dhv':
+         await _save_dhv_tests(page)
     else:
         print("not implemented yet")
 
@@ -207,6 +213,16 @@ async def _save_air_turquoise_tests(page:DataFrame):
                             SELECT :report_date, :item_name, :report_link, :report_class
                         """, params)
         await db.commit()
+
+async def _save_dhv_tests(page:DataFrame):
+    async with aiosqlite.connect(DB_NAME) as db:
+        for params in page.itertuples(index=False):
+            await db.execute_insert("""
+                            INSERT OR IGNORE INTO dhv_reports ([report_date], [item_name], [report_link], [report_class])
+                            SELECT :report_date, :item_name, :report_link, :report_class
+                        """, params)
+        await db.commit()
+
 
 async def get_open_reports(org:str):
         import pandas as pd
