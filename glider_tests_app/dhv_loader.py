@@ -94,6 +94,9 @@ async def extract_data(item_name:str, report_link:str):
         #print(tp)
         if tp:
             params['testpilots'] = ", " .join([t.text.strip() for t in tp.find_parent().findAll("td",{"class":"data"})])
+        acc =  soup.find("td",{"class":"label"},string= "Accelerator")
+        if acc:
+             params['accelerator'] = " " .join([t.text.strip() for t in acc.find_parent().findAll("td",{"class":"data"})])
 
         rows=[]
         first_test =  soup.find("td",{"class":"dashed_grey"},string= "Inflation/take-off").find_parent()
@@ -108,12 +111,15 @@ async def extract_data(item_name:str, report_link:str):
                 [test_name, rating1, rating2] = [t.text.strip() for t in test_cells]
                 #print(test_name, rating1, rating2)
                 evaluations.append({'item_name':item_name, 'test':test_name, 'rating':max(rating1.upper(),rating2.upper()) , 'rating1': rating1, 'rating2': rating2})
+            if len(test_cells)==1 and "accelerated" in test_cells[0].text.strip().lower() and params['accelerator'].lower()=='no':
+                evaluations.append({'item_name':item_name, 'test':test_cells[0].text.strip(), 'rating':0 , 'rating1': 0, 'rating2': 0})
 
     except requests.exceptions.HTTPError as err:
         print(err)
 
-    if len(params)==4 and len(evaluations)==27:
+    if len(params)==5 and len(evaluations)==27:
         return params, pd.DataFrame(evaluations)
     else:
         print('something is missing', item_name)
+        print(params)
         return None, pd.DataFrame()
