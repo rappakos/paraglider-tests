@@ -127,7 +127,10 @@ async def evaluations(request):
         pivoted = evaluations.set_index(['item_name','report_class','weight_min','weight_max','test_name']).unstack('test_name')
         def sorter(name):
             #print(name) 
-            return int(name[1].split('.')[0])
+            if org=='dhv':
+                return name
+            else:
+                return int(name[1].split('.')[0])
 
         sorted_columns = sorted(pivoted.columns.values, key=sorter)
         pivoted = pivoted[sorted_columns]
