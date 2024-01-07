@@ -148,7 +148,13 @@ async def get_download_link(link:str):
         if not a:
             a = soup.find("a",{"title":"Test report"})
         if not a:
+            a = soup.find("a",{"title":"Flight test"})            
+        if not a:
             a = soup.find("a",{"title":"Inspection certificate"})
+
+        # UTurn Emotion 4 SM: EN <> DE
+        # windtech-paragliders-honey-3-xs: only FR
+        # supair-birdy-s: EN <> FR
 
         if a:
             #print(a.prettify())
@@ -205,7 +211,7 @@ async def extract_ocr_data(item_name:str, filename:str):
     print(textrows)
     if not failed:
         params = filter_parameters(item_name, textrows, from_ocr=True)
-        #print(params)
+        print(params)
         evaluations = filter_evaluations(item_name, textrows, from_ocr=True)
         #print(evaluations)
         return params, pd.DataFrame(evaluations)
