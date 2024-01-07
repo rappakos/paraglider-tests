@@ -168,16 +168,34 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
         with engine.connect() as db:
             param = {
                     'org':org,
-                    'w':w
+                    'w':w,
+                    'item_name': f"%{'%,%'.join([i.strip() for i in item_name.split(',')])}%"
                     }
-            df  = read_sql_query(text(f"""
+            # df1 =  read_sql_query(text(f"""WITH RECURSIVE split(value, str) AS (
+            #                             SELECT null, :item_name || ','  -- the string to be split 
+            #                             UNION ALL
+            #                             SELECT
+            #                             substr(str, 0, instr(str, ',')),
+            #                             substr(str, instr(str, ',')+1)
+            #                             FROM split WHERE str!=''
+            #     ) SELECT value FROM split WHERE value is not NULL; """), db, params={'item_name': f"%{'%,%'.join([i.strip() for i in item_name.split(',')])}%"})      
+            # print(df1.head())
+
+            df  = read_sql_query(text(f"""WITH RECURSIVE split(value, str) AS (
+                                        SELECT null, :item_name || ','  -- the string to be split 
+                                        UNION ALL
+                                        SELECT
+                                        substr(str, 0, instr(str, ',')),
+                                        substr(str, instr(str, ',')+1)
+                                        FROM split WHERE str!=''
+                                    )
                             SELECT e.[item_name], p.weight_min, p.weight_max, l.std_test [test_name], max(upper(e.test_value)) [test_value], r.[report_class]
                             FROM dhv_evaluation e 
                             INNER JOIN dhv_reports r ON e.[item_name]=r.[item_name]
                             LEFT JOIN dhv_parameters p ON p.item_name=e.item_name
                             INNER JOIN test_mapping as l ON e.test_name=l.dhv_test
+                            inner join split s on e.item_name like s.[value]
                             WHERE :org in ('dhv','all')
-                                AND (e.item_name like '%{item_name}%' ) 
                                 AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
                                 AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
                             GROUP BY  e.[item_name], p.weight_min, p.weight_max, l.std_test, r.[report_class] 
@@ -186,8 +204,8 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                             FROM air_turquoise_evaluation e 
                             INNER JOIN air_turquoise_reports r ON e.[item_name]=r.[item_name]
                             LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
+                           inner join split s on e.item_name like s.[value]                            
                             WHERE :org in ('air-turquoise','all')
-                                AND (e.item_name like '%{item_name}%' ) 
                                 AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
                                 AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
                         """), db, params=param)                
