@@ -67,3 +67,16 @@ async def get_table_data(classification:str, index:int):
 
     return pd.DataFrame(data, columns=['report_date','item_name','report_link','report_class'])
 
+
+
+async def extract_data(item_name:str, report_link:str):
+    import pandas as pd
+    print(item_name,report_link)
+
+    params= {'item_name':item_name}
+    evaluations = []
+    # dummy
+    evaluations.append({'item_name':item_name, 'test':'test', 'rating': 0})
+    # TODO load
+
+    return params, pd.DataFrame(evaluations)

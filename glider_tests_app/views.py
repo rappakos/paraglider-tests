@@ -93,6 +93,11 @@ async def item_details(request):
                 #temp = await airturquoise_loader.extract_textrows(item.item_name, fname)
                 #print(temp)
                     
+
+        if not report.empty and org=='dhv':
+            for item in report.itertuples(index=None): # should be only 1
+                params, evaluation = await dhv_loader.extract_data(item.item_name, item.report_link)
+
         return {
             'id': item_id,
             'report': report.to_dict('records')[0],
