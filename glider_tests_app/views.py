@@ -5,6 +5,7 @@ from aiohttp import web
 
 from . import db
 from . import airturquoise_loader
+from . import dhv_loader
 
 ORGS = { 
     'air-turquoise':  {'name':'Air Turquoise'},
@@ -12,6 +13,7 @@ ORGS = {
 }
 
 DOWNLOAD_FOLDER = 'data/pdf'
+MIN_DATE = '2020-01-01'
 
 def get_filename(item_name:str):
     name =item_name.replace('"','')
@@ -134,17 +136,24 @@ async def evaluations(request):
 async def load_reports(request):
     org = request.match_info.get('org', None)    
     if request.method == 'POST':
-        if org=='air-turquoise':
+        if org in ORGS:
             # check if there are new entries
             for classification in ['A','B','C']:
                 start_date = await db.get_start_date(org,classification)
                 if start_date is None:
-                    start_date = '2020-01-01'
+                    start_date = MIN_DATE
                 print(classification,start_date)
 
-                pages = await airturquoise_loader.get_reports(classification,start_date)
-                for page in pages:
-                    await db.save_tests(org, page)
+                if org=='air-turquoise':
+                    pages = await airturquoise_loader.get_reports(classification,start_date)
+                    for page in pages:
+                        await db.save_tests(org, page)
+                if org=='dhv':
+                    pages = await dhv_loader.get_reports(classification,start_date)
+                    print(pages)
+
+
+
 
         raise redirect(request.app.router, 'reports', org=org)
     else:

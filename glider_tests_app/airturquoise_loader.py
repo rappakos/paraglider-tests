@@ -110,7 +110,7 @@ async def get_table_data(classification, index):
         #assert(len(tbl.findAll('tr'))-1,AIR_TURQUOISE_PAGE_SIZE)
         for tr in tbl.findAll('tr')[1:]:
             #print(tr.prettify())
-            report_date = datetime.strptime(tr.find('td',{"class":"catItemDateCreated"}).text.strip(), '%d.%m.%Y').strftime('%Y-%m-%d')  # TODO dd.mm.yyyy to yyyy-mm-dd
+            report_date = datetime.strptime(tr.find('td',{"class":"catItemDateCreated"}).text.strip(), '%d.%m.%Y').strftime('%Y-%m-%d')
             report_class = tr.find('td',{"class":"classification"}).text.strip()
             report_anchor = tr.find('a')
             report_link, item_name = report_anchor['href'], report_anchor.text.strip()
