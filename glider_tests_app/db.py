@@ -109,9 +109,9 @@ def _get_reports_query(org:str):
                 LEFT JOIN dhv_evaluation e ON e.[item_name]=r.[item_name] 
                 LEFT JOIN dhv_parameters p ON p.item_name=e.item_name       
                 GROUP BY r.[report_date], r.[item_name], r.[report_link], r.[report_class]
-                HAVING  r.[report_link] IS NULL OR count(e.test_value)=0 or p.item_name is null
+                --HAVING  r.[report_link] IS NULL OR count(e.test_value)=0 or p.item_name is null
                 ORDER BY [report_date] DESC
-                LIMIT 500
+                LIMIT 50
                 """ 
     
     return ""
@@ -136,7 +136,7 @@ async def get_report_details(org:str, item_id:str):
                 df  = pd.read_sql_query(text(f"""
                             SELECT [report_date], [item_name], [report_link], [report_class]
                             FROM dhv_reports r  
-                            WHERE replace(lower(r.[item_name]),' ','-') = :item_id
+                            WHERE  replace(replace(lower(r.[item_name]),' ','-'),'/','') = :item_id
                         """), db, params=param)
             return df        
         

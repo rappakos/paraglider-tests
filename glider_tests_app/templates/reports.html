@@ -35,8 +35,8 @@
             <th>Report date</th>
             <th>Item name</th>
             <th>Class</th>
-            {% if org=='air-turquoise' %}
-                <th>Weight range (kg)</th>
+            <th>Weight range (kg)</th>
+            {% if org=='air-turquoise' %}            
                 <th>Download link</th>
                 <th>PDF?</th>
             {% endif %}
@@ -47,8 +47,8 @@
             <td>{{report.report_date}}</td>
             <td><a href='/{{org}}{{report.item_id}}' > {{report.item_name}}</a></td>
             <td>{{report.report_class}}</td>
-            {% if org=='air-turquoise' %}
-                <td>{{report.weight_min|int}} - {{report.weight_max|int}} </td>
+            <td>{{report.weight_min|int}} - {{report.weight_max|int}} </td>
+            {% if org=='air-turquoise' %}            
                 <td>{{'-' if report.download_link is none else 'ok'}}</td>
                 <!-- <td>{{report.download_link}}</td> -->
                 <td>{{report.pdf_available}}</td>
