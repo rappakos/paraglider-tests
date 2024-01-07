@@ -63,6 +63,43 @@ CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
         UNIQUE (item_name)
  );
 
+CREATE TABLE IF NOT EXISTS test_mapping(
+       std_test TEXT NOT NULL,
+       dhv_test TEXT NOT NULL,
+       UNIQUE(std_test,dhv_test)
+);
+
+INSERT OR IGNORE INTO test_mapping(std_test,dhv_test)
+VALUES 
+    ('1. Inflation/Take-off','Inflation/take-off')
+    ,('2. Landing','Landing')
+    ,('3. Speed in straight flight','Speeds in straight flight')
+    ,('4. Control movement','Control movement')
+    ,('5. Pitch stability exiting accelerated flight','Pitch stability exiting accelerated flight')
+    ,('6. Pitch stability operating controls during','Pitch stability operating controls during accelerated flight')
+    ,('7. Roll stability and damping','Roll stability and damping')
+    ,('8. Stability in gentle spirals','Stability in gentle spirals')
+    ,('9. Behaviour exiting a fully developed spiral dive','Behaviour exiting a fully developed spiral dive')
+    ,('10. Symmetric front collapse','Symmetric front collapse')
+    ,('10. Symmetric front collapse','Unaccelerated collapse (at least 50 \% chord)')
+    ,('10. Symmetric front collapse','Accelerated collapse (at least 50 \% chord)')
+    ,('11. Exiting deep stall (parachutal stall)','Exiting deep stall (parachutal stall)')
+    ,('12. High angle of attack recovery','High angle of attack recovery')
+    ,('13. Recovery from a developed full stall','Recovery from a developed full stall')
+    ,('14. Asymmetric collapse','Small asymmetric collapse')
+    ,('14. Asymmetric collapse','Large asymmetric collapse')
+    ,('14. Asymmetric collapse','Small asymmetric collapse accelerated')
+    ,('14. Asymmetric collapse','Large asymmetric collapse accelerated')
+    ,('15. Directional control with a maintained','Directional control with a maintained asymmetric collapse')
+    ,('16. Trim speed spin tendency','Trim speed spin tendency')
+    ,('17. Low speed spin tendency','Low speed spin tendency')
+    ,('18. Recovery from a developed spin','Recovery from a developed spin')
+    ,('19. B-line stall','B-line stall')
+    ,('20. Big ears','Big ears')
+    ,('21. Big ears in accelerated flight','Big ears in accelerated flight')
+    ,('22. Alternative means of directional control','Alternative means of directional control');
+
+
 
 update air_turquoise_evaluation 
  set test_name = '6. Pitch stability operating controls during'

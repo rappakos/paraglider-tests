@@ -160,31 +160,35 @@ async def get_evaluation(org:str, item_name:str):
 
 
 async def get_evaluations(org:str,item_name:str, weight: str,classification:str):
-        if org not in ['dhv','air-turquoise']:
+        if org not in ['dhv','air-turquoise','all']:
             return DataFrame()
         w = int(weight) if weight and weight.isdecimal() else 0
         engine = create_engine(f'sqlite:///{DB_NAME}')
 
         with engine.connect() as db:
-            param = {}
-            if org=='dhv':
-                df  = read_sql_query(text(f"""
-                            SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value) [test_value], r.[report_class]
+            param = {
+                    'org':org,
+                    'w':w
+                    }
+            df  = read_sql_query(text(f"""
+                            SELECT e.[item_name], p.weight_min, p.weight_max, l.std_test [test_name], max(upper(e.test_value)) [test_value], r.[report_class]
                             FROM dhv_evaluation e 
                             INNER JOIN dhv_reports r ON e.[item_name]=r.[item_name]
                             LEFT JOIN dhv_parameters p ON p.item_name=e.item_name
-                            WHERE (e.item_name like '%{item_name}%' ) 
-                                AND ({w}=0 OR ({w} >= IFNULL(p.weight_min,0) and {w} <= IFNULL(p.weight_max,0)))
+                            INNER JOIN test_mapping as l ON e.test_name=l.dhv_test
+                            WHERE :org in ('dhv','all')
+                                AND (e.item_name like '%{item_name}%' ) 
+                                AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
                                 AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
-                        """), db, params=param)
-            else:
-                df  = read_sql_query(text(f"""
+                            GROUP BY  e.[item_name], p.weight_min, p.weight_max, l.std_test, r.[report_class] 
+                            UNION ALL
                             SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value) [test_value], r.[report_class]
                             FROM air_turquoise_evaluation e 
                             INNER JOIN air_turquoise_reports r ON e.[item_name]=r.[item_name]
                             LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
-                            WHERE (e.item_name like '%{item_name}%' ) 
-                                AND ({w}=0 OR ({w} >= IFNULL(p.weight_min,0) and {w} <= IFNULL(p.weight_max,0)))
+                            WHERE :org in ('air-turquoise','all')
+                                AND (e.item_name like '%{item_name}%' ) 
+                                AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
                                 AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
                         """), db, params=param)                
         return df

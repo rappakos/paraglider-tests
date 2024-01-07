@@ -9,7 +9,8 @@ from . import dhv_loader
 
 ORGS = { 
     'air-turquoise':  {'name':'Air Turquoise'},
-    'dhv': {'name': 'DHV'}
+    'dhv': {'name': 'DHV'},
+    'all': {'name': 'all'}
 }
 
 DOWNLOAD_FOLDER = 'data/pdf'
@@ -121,16 +122,14 @@ async def evaluations(request):
     if org in ORGS:
         evaluations = await db.get_evaluations(org, item_name, weight,classification)
         #print(evaluations.head())
+        #for t in evaluations['test_name'].unique():
+        #    print(t)
 
         # removes rows with 'weight_min','weight_max' None
         #pivoted = pd.pivot_table(evaluations,index=['item_name','weight_min','weight_max'], columns='test_name', values='test_value', aggfunc=max, fill_value=0)
         pivoted = evaluations.set_index(['item_name','report_class','weight_min','weight_max','test_name']).unstack('test_name')
         def sorter(name):
-            #print(name) 
-            if org=='dhv':
-                return name
-            else:
-                return int(name[1].split('.')[0])
+            return int(name[1].split('.')[0])
 
         sorted_columns = sorted(pivoted.columns.values, key=sorter)
         pivoted = pivoted[sorted_columns]
