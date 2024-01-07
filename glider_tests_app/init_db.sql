@@ -27,6 +27,17 @@ CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
         UNIQUE (item_name,test_name,test_value)
  );
 
+ CREATE TABLE IF NOT EXISTS dhv_evaluation (
+        item_name TEXT NOT NULL,
+        test_name TEXT NOT NULL,
+        test_value TEXT NOT NULL,
+        test1 TEXT NOT NULL,
+        test2 TEXT NOT NULL,
+        FOREIGN KEY(item_name) REFERENCES dhv_reports(item_name),
+        UNIQUE (item_name,test_name,test_value)
+ );
+
+
  --DELETE FROM air_turquoise_evaluation;
 
  CREATE TABLE IF NOT EXISTS air_turquoise_parameters (
@@ -42,6 +53,16 @@ CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
         FOREIGN KEY(item_name) REFERENCES air_turquoise_reports(item_name),
         UNIQUE (item_name)
  );
+
+ CREATE TABLE IF NOT EXISTS dhv_parameters (
+        item_name TEXT NOT NULL,
+        testpilots TEXT NOT NULL,
+        weight_min INT NOT NULL,
+        weight_max INT NOT NULL,
+        FOREIGN KEY(item_name) REFERENCES dhv_reports(item_name),
+        UNIQUE (item_name)
+ );
+
 
 update air_turquoise_evaluation 
  set test_name = '6. Pitch stability operating controls during'

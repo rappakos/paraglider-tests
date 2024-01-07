@@ -184,7 +184,17 @@ async def save_evaluation(org:str, evaluation):
                                 SELECT :item_name, :test, :rating
                             """, params)
                 #print(res)
-            await db.commit()        
+            await db.commit()
+    elif org=='dhv':
+        async with aiosqlite.connect(DB_NAME) as db:
+            for params in evaluation.itertuples(index=False):
+                #print(params)
+                res = await db.execute_insert("""
+                                INSERT OR IGNORE INTO dhv_evaluation ([item_name], [test_name], [test_value],[test1],[test2])
+                                SELECT :item_name, :test, :rating, :rating1, :rating2
+                            """, params)
+                #print(res)
+            await db.commit()                   
     else:
         print("not implemented yet")     
 
@@ -215,7 +225,24 @@ async def save_parameters(org:str, params):
                                         :weight_max                            
                             """, params)
                 #print(res)
-            await db.commit()        
+            await db.commit()
+    elif org=='dhv':
+        async with aiosqlite.connect(DB_NAME) as db:
+            #print(params)
+            res = await db.execute_insert("""
+                                INSERT OR IGNORE INTO dhv_parameters ( 
+                                        item_name ,
+                                        testpilots ,
+                                        weight_min ,
+                                        weight_max)
+                                SELECT 
+                                        :item_name ,
+                                        :testpilots ,
+                                        :weight_min ,
+                                        :weight_max                            
+                            """, params)
+                #print(res)
+            await db.commit()               
     else:
         print("not implemented yet")     
 

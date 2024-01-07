@@ -99,6 +99,11 @@ async def item_details(request):
                 params, evaluation = await dhv_loader.extract_data(item.item_name, item.report_link)
                 #print(params)
                 #print(evaluation)
+                if params:
+                    await db.save_parameters(org, params)
+                if not evaluation.empty:
+                    textrows = [f"{e.test}: {e.rating}" for e in evaluation.itertuples(index=None)]
+                    await db.save_evaluation(org, evaluation)                
 
         return {
             'id': item_id,
