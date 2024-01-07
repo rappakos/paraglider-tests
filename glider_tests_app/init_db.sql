@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS dhv_reports
                report_class TEXT,
                UNIQUE (item_name COLLATE NOCASE));
 
+--DELETE FROM dhv_reports;
+
+
 CREATE TABLE IF NOT EXISTS air_turquoise_evaluation (
         item_name TEXT NOT NULL,
         test_name TEXT NOT NULL,

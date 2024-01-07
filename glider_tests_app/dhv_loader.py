@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 
-DHV_TEST_PAGE_SIZE = 100
+DHV_TEST_PAGE_SIZE = 50
 DHV_TEST_URL = 'https://www.dhv.de/db3/muster/liste?fmuster=&fhersteller=&fgeraeteart=2&fpruefstelle=0&fklasse%5B%5D={classification}&s=1&count={DHV_TEST_PAGE_SIZE}&start={1+DHV_TEST_PAGE_SIZE*index}&lang=en'
 DHV_REPORT_URL = 'https://www.dhv.de/db1/technictestreport2.php?item=-{item_id}&lang=en'
 
@@ -16,9 +16,8 @@ async def get_reports(classification:str, start_day:str):
     pages = []
     while current_day > start_day:
         print(classification, page,current_day,start_day)
-        index = page * DHV_TEST_PAGE_SIZE
 
-        table_data = await get_table_data(classification, index)
+        table_data = await get_table_data(classification, page)
         if table_data.empty:
             break
         new_data = table_data[table_data['report_date'] > start_day ]
@@ -57,9 +56,10 @@ async def get_table_data(classification:str, index:int):
                     report_date_str = type_test[type_test.index('(')+1:type_test.index(')')]
                     report_date = datetime.strptime(report_date_str, '%d.%m.%Y').strftime('%Y-%m-%d')
                     if report_date > '2019-01-01':
-                        #print(report_date, item_name, report_link,report_class)
+                        #print(index,report_date, item_name, report_link,report_class)
                         data.append((report_date, item_name, report_link, report_class))
                     else:
+                        print(index, report_date, item_name, report_link,report_class)
                         break # exit loop over test_list
 
     except requests.exceptions.HTTPError as err:

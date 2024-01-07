@@ -58,8 +58,18 @@ async def get_stats():
                             , count(distinct e.[item_name]) [eval_count]
                         FROM air_turquoise_reports r  
                         LEFT JOIN air_turquoise_evaluation e ON e.[item_name]=r.[item_name]
-                        GROUP BY [report_class]                        
-                        ORDER BY [report_class]  
+                        GROUP BY [report_class]
+                        UNION ALL
+                       SELECT 
+                            'DHV' [org]
+                            , r.[report_class]
+                            , count(distinct r.[item_name]) [item_count]
+                            , max(r.[report_date]) [max_date]
+                            , min(r.[report_date]) [min_date]
+                            , 0 [eval_count]
+                        FROM dhv_reports r
+                        GROUP BY [report_class]         
+                        ORDER BY  [org], [report_class]  
                     """), db, params=param)
         return df
 
