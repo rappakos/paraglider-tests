@@ -111,7 +111,7 @@ async def get_evaluation(org:str, item_name:str):
         return df
 
 
-async def get_evaluations(org:str,item_name:str, weight: str):
+async def get_evaluations(org:str,item_name:str, weight: str,classification:str):
         if org != 'air-turquoise':
             return DataFrame()
         w = int(weight) if weight and weight.isdecimal() else 0
@@ -123,7 +123,9 @@ async def get_evaluations(org:str,item_name:str, weight: str):
                         FROM air_turquoise_evaluation e 
                         INNER JOIN air_turquoise_reports r ON e.[item_name]=r.[item_name]
                         LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
-                        WHERE (e.item_name like '%{item_name}%' ) AND ({w}=0 OR ({w} >= IFNULL(p.weight_min,0) and {w} <= IFNULL(p.weight_max,0)))
+                        WHERE (e.item_name like '%{item_name}%' ) 
+                            AND ({w}=0 OR ({w} >= IFNULL(p.weight_min,0) and {w} <= IFNULL(p.weight_max,0)))
+                            AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
                     """), db, params=param)
         return df
 

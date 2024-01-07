@@ -102,9 +102,9 @@ async def item_details(request):
 async def evaluations(request):
     import pandas as pd
 
-    org, item_name, weight = request.match_info.get('org', None),request.rel_url.query.get('item_name', ''),request.rel_url.query.get('weight', '')
+    org, item_name, weight,classification = request.match_info.get('org', None),request.rel_url.query.get('item_name', ''),request.rel_url.query.get('weight', ''),request.rel_url.query.get('classification', '')
     if org in ORGS:
-        evaluations = await db.get_evaluations(org, item_name, weight)
+        evaluations = await db.get_evaluations(org, item_name, weight,classification)
         #print(evaluations.head())
 
         # removes rows with 'weight_min','weight_max' None
@@ -124,7 +124,8 @@ async def evaluations(request):
             'evaluations': pivoted.to_dict('split'),
             'filter': {
                 'item_name':item_name,
-                'weight':weight
+                'weight':weight,
+                'classification':classification
             }
         }
     else:
