@@ -9,6 +9,7 @@
     </button>
     <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
+            <th>Class</th>
             <th>Item name</th>
             <th>Weight range (kg)</th>
             {% for j in range(evaluations.columns|length) -%}
@@ -17,6 +18,7 @@
             {%- endfor %}
         </tr>
         <tr>
+            <th><input id="classification" name="classification" type="text" value="{{filter.classification}}" size="2" /></th>
             <th><input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" /></th>
             <th><input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
             {% for j in range(evaluations.columns|length) -%}
@@ -25,8 +27,9 @@
         </tr>
         {% for i in range(evaluations.index|length) %}
         <tr>
+            <th>{{evaluations.index[i][1]}}</th>
             <th>{{evaluations.index[i][0]}}</th>
-            <th>{{evaluations.index[i][1]|int}} - {{evaluations.index[i][2]|int}}</th>
+            <th>{{evaluations.index[i][2]|int}} - {{evaluations.index[i][3]|int}}</th>
             {% for j in range(evaluations.columns|length) %}
                 <td class="w3-center {{evaluations.data[i][j]}}" title="{{evaluations.columns[j][1]}}"  >{{evaluations.data[i][j]}}</td>
             {% endfor %}

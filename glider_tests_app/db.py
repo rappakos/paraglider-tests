@@ -119,8 +119,9 @@ async def get_evaluations(org:str,item_name:str, weight: str):
         with engine.connect() as db:
             param = {}
             df  = read_sql_query(text(f"""
-                        SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value)
+                        SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value) [test_value], r.[report_class]
                         FROM air_turquoise_evaluation e 
+                        INNER JOIN air_turquoise_reports r ON e.[item_name]=r.[item_name]
                         LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
                         WHERE (e.item_name like '%{item_name}%' ) AND ({w}=0 OR ({w} >= IFNULL(p.weight_min,0) and {w} <= IFNULL(p.weight_max,0)))
                     """), db, params=param)

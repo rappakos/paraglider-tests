@@ -109,7 +109,7 @@ async def evaluations(request):
 
         # removes rows with 'weight_min','weight_max' None
         #pivoted = pd.pivot_table(evaluations,index=['item_name','weight_min','weight_max'], columns='test_name', values='test_value', aggfunc=max, fill_value=0)
-        pivoted = evaluations.set_index(['item_name','weight_min','weight_max','test_name']).unstack('test_name')
+        pivoted = evaluations.set_index(['item_name','report_class','weight_min','weight_max','test_name']).unstack('test_name')
         def sorter(name):
             #print(name) 
             return int(name[1].split('.')[0])
