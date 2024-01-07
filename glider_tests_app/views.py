@@ -97,6 +97,8 @@ async def item_details(request):
         if not report.empty and org=='dhv':
             for item in report.itertuples(index=None): # should be only 1
                 params, evaluation = await dhv_loader.extract_data(item.item_name, item.report_link)
+                #print(params)
+                #print(evaluation)
 
         return {
             'id': item_id,
