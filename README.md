@@ -31,6 +31,20 @@ Some PDF files need to be processed with an OCR tool.
 Add `tesseract_cmd` with path to the exe to a `.env` file.
 
 
+### Run on Android
+
+* install Termux (with F-Droid)
+* install Termux:Widget (with F-Droid)
+* check out this repo in Termux
+* install python requirements
+* copy a `glider_tests.db` next to the `app.py` file
+* create `.shortcuts/tasks/pg-test.bash` in ~ with following:
+ ** cd <github folder>/paraglider-tests;
+ ** python app.py
+* add shortcut with the termux widget to the screen
+* go to 
+http://localhost:3978/
+
 
 
 
