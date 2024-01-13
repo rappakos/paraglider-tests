@@ -7,7 +7,7 @@ from datetime import datetime
 DHV_TEST_PAGE_SIZE = 50
 DHV_TEST_URL = 'https://www.dhv.de/db3/muster/liste?fmuster=&fhersteller=&fgeraeteart=2&fpruefstelle=0&fklasse%5B%5D={classification}&s=1&count={DHV_TEST_PAGE_SIZE}&start={1+DHV_TEST_PAGE_SIZE*index}&lang=en'
 DHV_BASE_URL = 'https://www.dhv.de'
-DHV_TEST_URL = 'https://www.dhv.de/db1/technictestreport2.php?item={item_id}&lang=en'
+DHV_TEST_REPORT_URL = 'https://www.dhv.de/db1/technictestreport2.php?item={item_id}&lang=en'
 
 
 
@@ -79,7 +79,7 @@ async def extract_data(item_name:str, report_link:str):
     
     # data sheet => LTF test sheet
     item_id = parse.parse_qs(parse.urlparse(report_link).query)['idtype'][0]
-    url =  eval(f"f'{DHV_TEST_URL}'") # auto
+    url =  eval(f"f'{DHV_TEST_REPORT_URL}'") # auto
     print(url)
     try:
         resp = requests.get(url)
@@ -113,13 +113,17 @@ async def extract_data(item_name:str, report_link:str):
                 evaluations.append({'item_name':item_name, 'test':test_name, 'rating':max(rating1.upper(),rating2.upper()) , 'rating1': rating1, 'rating2': rating2})
             if len(test_cells)==1 and "accelerated" in test_cells[0].text.strip().lower() and params['accelerator'].lower()=='no':
                 evaluations.append({'item_name':item_name, 'test':test_cells[0].text.strip(), 'rating':0 , 'rating1': 0, 'rating2': 0})
+            if len(test_cells)==1 and test_cells[0].text.strip().lower() in ['b-line stall','big ears','big ears in accelerated flight']:
+                evaluations.append({'item_name':item_name, 'test':test_cells[0].text.strip(), 'rating':0 , 'rating1': 0, 'rating2': 0})
 
     except requests.exceptions.HTTPError as err:
         print(err)
 
-    if len(params)==5 and len(evaluations)==27:
+    if len(params)==5 and len(evaluations) in [27,28]:
         return params, pd.DataFrame(evaluations)
     else:
         print('something is missing', item_name)
         print(params)
+        print(len(evaluations))
+        print(evaluations)
         return None, pd.DataFrame()

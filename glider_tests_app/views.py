@@ -153,7 +153,7 @@ async def load_reports(request):
     if request.method == 'POST':
         if org in ORGS:
             # check if there are new entries
-            for classification in ['A','B','C']:
+            for classification in ['A','B','C','D']:
                 start_date = await db.get_start_date(org,classification)
                 if start_date is None:
                     start_date = MIN_DATE
