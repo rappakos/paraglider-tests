@@ -61,7 +61,7 @@ async def item_details(request):
         report = await db.get_report_details(org, item_id)
         #print(report.head())
         textrows = []
-        if not report.empty and org=='air-turqouise':
+        if not report.empty and org=='air-turquoise':
             for item in report.itertuples(index=None):
                 evaluation = await db.get_evaluation(org, item.item_name)
                 fname = get_filename(item.item_name)
