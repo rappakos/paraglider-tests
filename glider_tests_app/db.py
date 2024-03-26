@@ -206,7 +206,7 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                             LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
                            inner join split s on e.item_name like s.[value]                            
                             WHERE :org in ('air-turquoise','all')
-                                AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
+                                AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))
                                 AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
                         """), db, params=param)                
         return df
