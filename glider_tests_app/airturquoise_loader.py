@@ -22,7 +22,7 @@ TEST_PARAMS_TEMPLATE = [
 TEST_PARAMS_OCR_TEMPLATE = [
     '(?:Test pilot)\s(?P<testpilots>\w+(\s+\w+)*)',
     '(?:Harness)\s(?P<harnesses>\w+(\s+[-\w]+)*)',
-    '(?:Harness to risers distance(?: (\(cm\)|\[cm\]))?)\s(?P<depth_min>\d{2,3})\s(?P<depth_max>\d{2,3})', 
+    '(?:Harness to risers distance(?: (\(cm\)|\[cm\]))?)\s(?P<depth_min>(\d{2,3}|n/a))\s(?P<depth_max>\d{2,3})', 
     '(?:(?:\(cm\) )?Distance between risers(?: (\(cm\)|\[cm\]))?)\s(?P<width_min>\d{2,3})\s(?P<width_max>\d{2,3})', # \(cm\) may be  somewere?
     '(?:(?:\(cm\) )?Total weight in flight(?: (\(kg\)|\[kg\]))?)\s(?P<weight_min>\d{2,3})\s(?P<weight_max>\d{2,3})'
 ]
