@@ -161,3 +161,4 @@ cython_debug/
 *.db
 *.pdf
 data/
+az_deploy.ps1
