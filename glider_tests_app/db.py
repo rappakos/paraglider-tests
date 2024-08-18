@@ -313,8 +313,9 @@ async def save_tests(org:str, page:DataFrame):
 async def _save_air_turquoise_tests(page:DataFrame):
     async with aiosqlite.connect(DB_NAME) as db:
         for params in page.itertuples(index=False):
+            #print(params.item_name)
             await db.execute_insert("""
-                            INSERT INTO air_turquoise_reports ([report_date], [item_name], [report_link], [report_class])
+                            INSERT  OR IGNORE INTO air_turquoise_reports ([report_date], [item_name], [report_link], [report_class])
                             SELECT :report_date, :item_name, :report_link, :report_class
                         """, params)
         await db.commit()
