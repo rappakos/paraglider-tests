@@ -4,8 +4,10 @@ import aiohttp_jinja2
 from aiohttp import web
 
 from . import db
-from . import airturquoise_loader
-from . import dhv_loader
+if False:
+    from . import airturquoise_loader
+if False:
+    from . import dhv_loader
 
 ORGS = { 
     'air-turquoise':  {'name':'Air Turquoise'},

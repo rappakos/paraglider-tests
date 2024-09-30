@@ -9,7 +9,8 @@ from pypdf import PdfReader
 
 AIR_TURQUOISE_PAGE_SIZE=25
 AIR_TURQUISE_BASE_URL = 'https://para-test.com'
-AIR_TURQUISE_TEST_URL = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
+#AIR_TURQUISE_TEST_URL_OLD = 'https://para-test.com/component/jak2filter/?Itemid=114&issearch=1&isc=1&category_id=11&xf_3_txt={classification}&ordering=publishUp&orders[publishUp]=rpublishUp&orders[date]=date&start={index}'
+AIR_TURQUISE_TEST_URL = 'https://para-test.com/reports?page=1&category=Glider_PG_&classification={classification}&page={index}#main-content'
 
 TEST_PARAMS_TEMPLATE = [
     '(?:Test pilot)\s(?P<testpilots>\w+(\s+\w+)*)',

@@ -7,6 +7,15 @@
     <button type="submit" class="btn btn-success" >
      <i class="fa fa-filter"></i> Filter table
     </button>
+    <script>
+        function showTitle(title) {
+            //console.log(title);
+            const toolTip = document.getElementById("toolTip");
+            toolTip.innerText=  title;
+        }
+
+    </script>
+
     <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
             <th>Class</th>
@@ -14,7 +23,7 @@
             <th>Weight range (kg)</th>
             {% for j in range(evaluations.columns|length) -%}
                 <!-- <th class="w3-center" style="writing-mode: vertical-rl;text-orientation: mixed;" >{{column}}</th> -->
-                <th class="w3-center" title="{{evaluations.columns[j][1]}}" >{{j+1}}.</th>
+                <th class="w3-center" title="{{evaluations.columns[j][1]}}" onmouseover="showTitle(title)" >{{j+1}}.</th>
             {%- endfor %}
         </tr>
         <tr>
@@ -22,7 +31,7 @@
             <th><input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" /></th>
             <th><input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
             {% for j in range(evaluations.columns|length) -%}
-            <th></th>
+            <th colspan="{{evaluations.columns|length}}">    <div id="toolTip"></div></th>
             {%- endfor %}
         </tr>
         {% for i in range(evaluations.index|length) %}
@@ -31,7 +40,10 @@
             <th>{{evaluations.index[i][0]}}</th>
             <th>{{evaluations.index[i][2]|int}} - {{evaluations.index[i][3]|int}}</th>
             {% for j in range(evaluations.columns|length) %}
-                <td class="w3-center {{evaluations.data[i][j]}}" title="{{evaluations.columns[j][1]}}"  >{{evaluations.data[i][j]}}</td>
+                <td class="w3-center {{evaluations.data[i][j]}}" 
+                    title="{{evaluations.columns[j][1]}}" 
+                    onmouseover="showTitle(title)"
+                    ontouchstart="showTitle(title)"  >{{evaluations.data[i][j]}}</td>
             {% endfor %}
         </tr>
         {% endfor %}

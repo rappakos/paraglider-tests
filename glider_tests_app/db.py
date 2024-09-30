@@ -196,8 +196,8 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                             INNER JOIN test_mapping as l ON e.test_name=l.dhv_test
                             inner join split s on e.item_name like s.[value]
                             WHERE :org in ('dhv','all')
-                                AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
-                                AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
+                                AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))
+                                AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.upper().split(","))}') )
                             GROUP BY  e.[item_name], p.weight_min, p.weight_max, l.std_test, r.[report_class] 
                             UNION ALL
                             SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value) [test_value], r.[report_class]
@@ -207,7 +207,7 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                            inner join split s on e.item_name like s.[value]                            
                             WHERE :org in ('air-turquoise','all')
                                 AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))
-                                AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.split(","))}') )
+                                AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.upper().split(","))}') )
                         """), db, params=param)                
         return df
 

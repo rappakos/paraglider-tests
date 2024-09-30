@@ -1,0 +1,11 @@
+{
+    "appService.zipIgnorePattern" : [
+        "data/*",
+        ".env",
+        ".gitignore",
+        "*.ps1",
+        ".pdf{,/**}",
+        ".vscode{,/**}",
+        "*.ipynb"
+    ]
+}
