@@ -123,10 +123,12 @@ async def get_report_details(org:str, item_id:str):
             engine = create_engine(f'sqlite:///{DB_NAME}')
             with engine.connect() as db:
                 param = {}
+                if item_id.endswith('-new'):
+                    item_id = item_id.replace('-new','') # regex would be better?
                 df  = pd.read_sql_query(text(f"""
                             SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
                             FROM air_turquoise_reports r  
-                            WHERE r.[report_link] = '/reports/item/{item_id}'
+                            WHERE r.[report_link] = '/reports/item/{item_id}' OR r.[report_link] LIKE '?model=Glider&id={item_id}&category=Glider_PG%'
                         """), db, params=param)
             return df
         if org == 'dhv':

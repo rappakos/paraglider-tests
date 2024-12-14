@@ -45,7 +45,7 @@
         {% for report in reports %}
         <tr>
             <td>{{report.report_date}}</td>
-            <td><a href='/{{org}}{{report.item_id}}' > {{report.item_name}}</a></td>
+            <td><a href='/{{org}}/items/{{report.item_id}}' > {{report.item_name}}</a></td>
             <td>{{report.report_class}}</td>
             <td>{{report.weight_min|int}} - {{report.weight_max|int}} </td>
             {% if org=='air-turquoise' %}            

@@ -3,6 +3,7 @@ import os
 import aiohttp_jinja2
 from aiohttp import web
 
+
 from . import db
 if True:
     from . import airturquoise_loader
@@ -21,6 +22,22 @@ MIN_DATE = '2020-01-01'
 def get_filename(item_name:str):
     name =item_name.replace('"','').replace('/','')
     return f"{DOWNLOAD_FOLDER}/{'_'.join(name.split())}.pdf"
+
+def generate_item_id(org,item_name,report_link ):
+    from urllib.parse import parse_qs
+
+    if org=='dhv':
+        return '-'.join(item_name.lower().replace("/","").split(' '))
+    if org=='air-turquoise':
+        if report_link.startswith('/reports/item'):
+            return report_link.replace('/reports/item/','')         
+        else:
+            new_id = parse_qs(report_link)['id'][0]
+
+            return new_id+'-new'
+
+    return None
+
 
 
 def redirect(router, route_name, org = None):
@@ -42,7 +59,7 @@ async def reports(request):
         if not reports.empty:
             reports['pdf_available'] = reports.apply(lambda row: exists(get_filename(row.item_name)) , axis=1)
             #reports['eval_available'] = reports.apply(lambda x: True if x.evaluation==1 else False , axis=1)
-            reports['item_id'] = reports.apply(lambda row: '/reports/item/' + '-'.join(row.item_name.lower().replace("/","").split(' ')) if org=='dhv' else row.report_link  , axis=1)
+            reports['item_id'] = reports.apply(lambda row: generate_item_id(org,row.item_name,row.report_link ), axis=1)
 
         #evaluations = await db.get_evaluations(org)
         #print(evaluations.head())
