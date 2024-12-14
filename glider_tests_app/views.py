@@ -4,9 +4,9 @@ import aiohttp_jinja2
 from aiohttp import web
 
 from . import db
-if False:
+if True:
     from . import airturquoise_loader
-if False:
+if True:
     from . import dhv_loader
 
 ORGS = { 
@@ -19,7 +19,7 @@ DOWNLOAD_FOLDER = 'data/pdf'
 MIN_DATE = '2020-01-01'
 
 def get_filename(item_name:str):
-    name =item_name.replace('"','')
+    name =item_name.replace('"','').replace('/','')
     return f"{DOWNLOAD_FOLDER}/{'_'.join(name.split())}.pdf"
 
 
@@ -185,7 +185,7 @@ async def load_details(request):
                 if download_link:
                     await db.save_download_link(item.report_link, download_link)
                 else:
-                    print(f'no success - {airturquoise_loader.AIR_TURQUISE_BASE_URL}{item.report_link}')
+                    print(f'no success - {airturquoise_loader.AIR_TURQUISE_BASE_URL}/reports{item.report_link}')
 
 
         raise redirect(request.app.router, 'reports', org=org)
@@ -206,7 +206,7 @@ async def load_pdf(request):
                 if exists(fname):
                     print(f'{fname} - ok')
                 else:
-                    url = f"{airturquoise_loader.AIR_TURQUISE_BASE_URL}{item.download_link}"
+                    url = f"{airturquoise_loader.AIR_TURQUISE_BASE_URL}/{item.download_link}" if item.download_link.startswith('storage') else f"{airturquoise_loader.AIR_TURQUISE_BASE_URL}{item.download_link}" 
                     print(f'downloading {fname} from {url}')
                     r = requests.get(url, allow_redirects=True)
                     open(fname, 'wb').write(r.content)

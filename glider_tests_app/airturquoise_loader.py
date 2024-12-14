@@ -107,14 +107,16 @@ async def get_table_data(classification, index):
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
         #print(soup.prettify)        
-        tbl = soup.find('table',{"class":"itemList"})
+        table_div = soup.find('div',{"id":"reportlist-ReportsList"})
+        tbl = table_div.find('table')
         #assert(len(tbl.findAll('tr'))-1,AIR_TURQUOISE_PAGE_SIZE)
         for tr in tbl.findAll('tr')[1:]:
             #print(tr.prettify())
-            report_date = datetime.strptime(tr.find('td',{"class":"catItemDateCreated"}).text.strip(), '%d.%m.%Y').strftime('%Y-%m-%d')
-            report_class = tr.find('td',{"class":"classification"}).text.strip()
-            report_anchor = tr.find('a')
-            report_link, item_name = report_anchor['href'], report_anchor.text.strip()
+            td_list=tr.findAll('td')
+            report_date = datetime.strptime(td_list[0].text.strip(), '%d.%m.%Y').strftime('%Y-%m-%d')
+            item_name = td_list[1].text.strip()
+            report_link = td_list[0].find('a')['href']
+            report_class = td_list[2].text.strip()
             #print((report_date, item_name, report_link))
             data.append((report_date, item_name, report_link, report_class))
     except requests.exceptions.HTTPError as err:
@@ -123,35 +125,26 @@ async def get_table_data(classification, index):
     return pd.DataFrame(data, columns=['report_date','item_name','report_link','report_class'])
 
 async def get_download_link(link:str):
-    url = f"{AIR_TURQUISE_BASE_URL}{link}"
+    url = f"{AIR_TURQUISE_BASE_URL}/reports{link}"
     try:
         resp = requests.get(url)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
         #print(soup.prettify)
-        a = soup.find("a",{"title":"Flight report"})
-        if not a:
-            a = soup.find("a",{"title":" Flight report"})
-        if not a:
-            a = soup.find("a",{"title":"Flight report "})
-        if not a:
-            a = soup.find("a",{"title":"Flight Reports"})
-        if not a:
-            a = soup.find("a",{"title":"Flight report EN"})
-        if not a:
-            a = soup.find("a",{"title":"Flight test EN"})            
-        if not a:
-            a = soup.find("a",{"title":"Flight report trimmer closed"}) # tandems?
-        if not a:
-            a = soup.find("a",{"title":"Flight report trimmer closed "}) # tandems?                        
-        if not a:
-            a = soup.find("a",{"title":" Flight report trimmer closed"}) # tandems?
-        if not a:
-            a = soup.find("a",{"title":"Test report"})
-        if not a:
-            a = soup.find("a",{"title":"Flight test"})            
-        if not a:
-            a = soup.find("a",{"title":"Inspection certificate"})
+        table = soup.find("table")
+        a = None
+        for tr in table.find("tbody").findAll('tr'):
+            #print(tr)
+            td = tr.find('td') # first
+            alink = td.find('a')
+            #print( alink.text if alink else '-' )
+            if alink and alink.text.strip()=='Flight report':
+                a = alink
+            if alink and alink.text.strip()=='Flight report trimmer closed':
+                a = alink                
+
+            if a:
+                break
 
         # UTurn Emotion 4 SM: EN <> DE
         # windtech-paragliders-honey-3-xs: only FR
