@@ -88,13 +88,17 @@ async def get_reports(classification:str, start_day:str):
         index = page * AIR_TURQUOISE_PAGE_SIZE
 
         table_data = await get_table_data(classification, index)
+        #print(classification, page, table_data.empty)
         new_data = table_data[table_data['report_date'] > start_day ]
         if not new_data.empty:
             pages.append(new_data)
-
+        #print(table_data.to_markdown())
         # step forward
-        current_day = min(table_data['report_date'])
-        page = page + 1
+        if table_data.empty:
+            current_day = min(table_data['report_date'])
+            page = page + 1
+        else:
+            current_day = start_day # ???
     
     return pages
 
@@ -133,6 +137,7 @@ async def get_download_link(link:str):
         #print(soup.prettify)
         table = soup.find("table")
         a = None
+        a_de = None
         for tr in table.find("tbody").findAll('tr'):
             #print(tr)
             td = tr.find('td') # first
@@ -141,8 +146,9 @@ async def get_download_link(link:str):
             if alink and alink.text.strip()=='Flight report':
                 a = alink
             if alink and alink.text.strip()=='Flight report trimmer closed':
-                a = alink                
-
+                a = alink     
+            if alink and alink.text.strip()=='Flugbericht':
+                a_de = alink     
             if a:
                 break
 
@@ -154,6 +160,9 @@ async def get_download_link(link:str):
             #print(a.prettify())
             download_link = a['href']
             return download_link
+        #elif a_de:
+        #   download_link = a_de['href']
+        #   return download_link.replace('_de.pdf','_en.pdf')
 
     except requests.exceptions.HTTPError as err:
         print(err)
