@@ -31,6 +31,43 @@ Some PDF files need to be processed with an OCR tool.
 Add `tesseract_cmd` with path to the exe to a `.env` file.
 
 
+## Running locally (FastAPI)
+
+The project has been migrated to FastAPI. The instructions below intentionally skip database initialization — the app expects an existing `glider_tests.db` when started.
+
+1) Create and activate a virtual environment, then install dependencies:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+2) Copy `.env` from `template.env` if present and edit values such as `PORT` :
+
+```powershell
+copy template.env .env
+notepad .env
+```
+
+3) Start the FastAPI server (development mode with auto-reload):
+
+```powershell
+# from repo root
+uvicorn main:app --reload --host 127.0.0.1 --port 3978
+```
+
+4) Open the app in your browser:
+
+- UI: `http://127.0.0.1:3978/`
+- API docs (Swagger): `http://127.0.0.1:3978/docs`
+
+Notes:
+- Database setup is intentionally skipped here. If you don't have a DB file, create or copy one next to the repository root (file name `glider_tests.db`) in `.env`.
+- If you still want to run the legacy aiohttp app while migrating, run `python app.py` instead.
+- For scrapers that use Selenium, ensure Chrome is installed; `webdriver-manager` will manage the ChromeDriver.
+
 ### Run on Android
 
 * install Termux (with F-Droid)

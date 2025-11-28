@@ -162,3 +162,4 @@ cython_debug/
 *.pdf
 data/
 az_deploy.ps1
+MIGRATION_GUIDE.md
