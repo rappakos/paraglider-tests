@@ -41,7 +41,7 @@ def generate_item_id(org,item_name,report_link ):
 async def index(request: Request) -> HTMLResponse:
     templates = request.app.state.templates
     stats = await db.get_stats()
-    return templates.TemplateResponse("index.html", {
+    return templates.TemplateResponse(request, "index.html", {
         "request": request,
         "data": stats.to_dict('records')
     })
@@ -57,7 +57,7 @@ async def reports(org: str, request: Request) -> HTMLResponse:
             reports_df['item_id'] = reports_df.apply(lambda row: generate_item_id(org, row.item_name, row.report_link), axis=1)
 
         templates = request.app.state.templates
-        return templates.TemplateResponse("reports.html", {
+        return templates.TemplateResponse(request, "reports.html", {
             "request": request,
             "org": org,
             "orgdata": ORGS[org],
@@ -105,7 +105,7 @@ async def item_details(org: str, item_id: str, request: Request) -> HTMLResponse
                     await db.save_evaluation(org, evaluation)
 
         templates = request.app.state.templates
-        return templates.TemplateResponse("item_details.html", {
+        return templates.TemplateResponse(request, "item_details.html", {
             "request": request,
             "id": item_id,
             "report": report.to_dict('records')[0],
@@ -133,7 +133,7 @@ async def evaluations(org: str, request: Request) -> HTMLResponse:
         pivoted = pivoted[sorted_columns]
 
         templates = request.app.state.templates
-        return templates.TemplateResponse("evaluations.html", {
+        return templates.TemplateResponse(request, "evaluations.html", {
             "request": request,
             "org": org,
             "orgdata": ORGS[org],
