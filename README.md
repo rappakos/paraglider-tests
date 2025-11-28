@@ -65,7 +65,8 @@ uvicorn main:app --reload --host 127.0.0.1 --port 3978
 
 Notes:
 - Database setup is intentionally skipped here. If you don't have a DB file, create or copy one next to the repository root (file name `glider_tests.db`) in `.env`.
-- If you still want to run the legacy aiohttp app while migrating, run `python app.py` instead.
+- If you still want to run the legacy aiohttp app while migrating, run `python main.py` instead.
+- Legacy aiohttp entrypoint removed; use the FastAPI server (`main.py`) with `uvicorn` instead.
 - For scrapers that use Selenium, ensure Chrome is installed; `webdriver-manager` will manage the ChromeDriver.
 
 ### Run on Android
@@ -74,10 +75,10 @@ Notes:
 * install Termux:Widget (with F-Droid)
 * check out this repo in Termux
 * install python requirements
-* copy a `glider_tests.db` next to the `app.py` file
+* copy a `glider_tests.db` next to the `main.py` file
 * create `.shortcuts/tasks/pg-test.bash` in ~ with following:
  ** cd <github folder>/paraglider-tests;
- ** python app.py
+ ** uvicorn main:app --host 127.0.0.1 --port 3978
 * add shortcut with the termux widget to the screen
 * go to 
 http://localhost:3978/
