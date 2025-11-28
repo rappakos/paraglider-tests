@@ -17,3 +17,5 @@ scipy
 pypdf
 Pillow
 pdf2image
+pytest
+httpx
