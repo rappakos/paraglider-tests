@@ -6,12 +6,12 @@ from fastapi.exceptions import RequestValidationError
 
 async def handle_404(request: Request, exc: Exception) -> HTMLResponse:
     templates = request.app.state.templates
-    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    return templates.TemplateResponse(request, "404.html", {"request": request}, status_code=404)
 
 
 async def handle_500(request: Request, exc: Exception) -> HTMLResponse:
     templates = request.app.state.templates
-    return templates.TemplateResponse("500.html", {"request": request}, status_code=500)
+    return templates.TemplateResponse(request, "500.html", {"request": request}, status_code=500)
 
 
 def setup_middlewares(app: FastAPI):
