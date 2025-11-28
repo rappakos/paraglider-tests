@@ -191,10 +191,8 @@ async def extract_ocr_data(item_name:str, filename:str):
     textrows, failed = [], False
     pdf_file = convert_from_bytes(open(filename, 'rb').read())
     for (i,page) in enumerate(pdf_file) :
-        #print(i, page)
         try:
             text = pytesseract.image_to_string(page,config='--psm 4')
-            #print(text)
             lines = text.split('\n')
             # hacks
             hack = '21. Big ears in accelerated flight E . -'
@@ -216,7 +214,6 @@ async def extract_ocr_data(item_name:str, filename:str):
         params = filter_parameters(item_name, textrows, from_ocr=True)
         print(params)
         evaluations = filter_evaluations(item_name, textrows, from_ocr=True)
-        #print(evaluations)
         return params, pd.DataFrame(evaluations)
     else:
         return None,  pd.DataFrame()

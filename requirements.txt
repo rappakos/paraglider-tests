@@ -15,3 +15,5 @@ plotly
 kaleido
 scipy
 pypdf
+Pillow
+pdf2image
