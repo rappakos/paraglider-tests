@@ -48,7 +48,7 @@ async def get_stats():
     engine = create_engine(f'sqlite:///{DB_NAME}')
     with engine.connect() as db:
         param = {}
-        df  = pd.read_sql_query(text(f"""
+        df  = pd.read_sql_query(text("""
                         SELECT 
                             'Air Turquoise' [org]
                             , r.[report_class]
@@ -122,13 +122,14 @@ async def get_report_details(org:str, item_id:str):
         if org == 'air-turquoise':
             engine = create_engine(f'sqlite:///{DB_NAME}')
             with engine.connect() as db:
-                param = {}
                 if item_id.endswith('-new'):
                     item_id = item_id.replace('-new','') # regex would be better?
-                df  = pd.read_sql_query(text(f"""
-                            SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
-                            FROM air_turquoise_reports r  
-                            WHERE r.[report_link] = '/reports/item/{item_id}' OR r.[report_link] LIKE '?model=Glider&id={item_id}&category=Glider_PG%'
+                param = {'item_id': item_id}
+                df  = pd.read_sql_query(text("""
+                                SELECT [report_date], [item_name], [report_link], [report_class], [download_link]
+                                FROM air_turquoise_reports r  
+                                WHERE r.[report_link] = '/reports/item/' || :item_id 
+                                OR r.[report_link] LIKE '?model=Glider&id=' || :item_id || '&category=Glider_PG%'
                         """), db, params=param)
             return df
         if org == 'dhv':
@@ -153,7 +154,7 @@ async def get_evaluation(org:str, item_name:str):
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {'item_name':item_name}
-            df  = read_sql_query(text(f"""
+            df  = read_sql_query(text("""
                         SELECT e.[item_name], e.test_name [test], e.test_value [rating]
                         FROM air_turquoise_evaluation e 
                         WHERE e.[item_name] = :item_name
@@ -165,23 +166,26 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
         if org not in ['dhv','air-turquoise','all']:
             return DataFrame()
         w = int(weight) if weight and weight.isdecimal() else 0
-        engine = create_engine(f'sqlite:///{DB_NAME}')
 
+        if classification:
+            classes = [c.strip().upper() for c in classification.split(',')]
+            # Create individual parameters for each classification
+            class_params = {f'class{i}': cls for i, cls in enumerate(classes)}
+            class_placeholders = ', '.join([f':class{i}' for i in range(len(classes))])
+            class_filter = f"UPPER(r.[report_class]) IN ({class_placeholders})"
+        else:
+            class_params = {}
+            class_filter = "1=1"
+
+
+        engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {
                     'org':org,
                     'w':w,
-                    'item_name': f"%{'%,%'.join([i.strip() for i in item_name.split(',')])}%"
+                    'item_name': f"%{'%,%'.join([i.strip() for i in item_name.split(',')])}%",
+                    **class_params
                     }
-            # df1 =  read_sql_query(text(f"""WITH RECURSIVE split(value, str) AS (
-            #                             SELECT null, :item_name || ','  -- the string to be split 
-            #                             UNION ALL
-            #                             SELECT
-            #                             substr(str, 0, instr(str, ',')),
-            #                             substr(str, instr(str, ',')+1)
-            #                             FROM split WHERE str!=''
-            #     ) SELECT value FROM split WHERE value is not NULL; """), db, params={'item_name': f"%{'%,%'.join([i.strip() for i in item_name.split(',')])}%"})      
-            # print(df1.head())
 
             df  = read_sql_query(text(f"""WITH RECURSIVE split(value, str) AS (
                                         SELECT null, :item_name || ','  -- the string to be split 
@@ -199,7 +203,7 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                             inner join split s on e.item_name like s.[value]
                             WHERE :org in ('dhv','all')
                                 AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))
-                                AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.upper().split(","))}') )
+                                AND({class_filter})
                             GROUP BY  e.[item_name], p.weight_min, p.weight_max, l.std_test, r.[report_class] 
                             UNION ALL
                             SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value) [test_value], r.[report_class]
@@ -209,7 +213,7 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                            inner join split s on e.item_name like s.[value]                            
                             WHERE :org in ('air-turquoise','all')
                                 AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))
-                                AND({'1=0' if classification else '1=1'} OR UPPER(r.[report_class]) in ('{"','".join(classification.upper().split(","))}') )
+                                AND({class_filter})
                         """), db, params=param)                
         return df
 
@@ -294,7 +298,7 @@ async def get_open_evaluations(org:str):
     engine = create_engine(f'sqlite:///{DB_NAME}')
     with engine.connect() as db:
         param = {}
-        df  = read_sql_query(text(f"""
+        df  = read_sql_query(text("""
                         SELECT r.[item_name]
                         FROM air_turquoise_reports r 
                         WHERE NOT EXISTS (select 1 from air_turquoise_evaluation e 
@@ -340,7 +344,7 @@ async def get_open_reports(org:str):
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {}
-            df  = pd.read_sql_query(text(f"""
+            df  = pd.read_sql_query(text("""
                         SELECT [item_name], [report_link]
                         FROM air_turquoise_reports r 
                         WHERE [download_link] is null 
@@ -358,7 +362,7 @@ async def get_download_links(org:str):
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
             param = {}
-            df  = pd.read_sql_query(text(f"""
+            df  = pd.read_sql_query(text("""
                         SELECT r.[item_name], r.[download_link]
                         FROM air_turquoise_reports r 
                         WHERE r.[download_link] is not null 
