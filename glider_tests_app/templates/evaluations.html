@@ -3,7 +3,7 @@
 {% set title = orgdata.name %}
 
 {% block content %}
-<form action="/{{org}}/evaluations" method="get" class="w3-container" autocomplete="off">
+<form action="{{ url_for('evaluations', org=org) }}" method="get" class="w3-container" autocomplete="off">
     <button type="submit" class="btn btn-success" >
      <i class="fa fa-filter"></i> Filter table
     </button>

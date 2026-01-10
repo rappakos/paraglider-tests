@@ -24,7 +24,7 @@
         <input type="submit" value="Extract PDF" class="w3-button"  />
     </form> -->
 
-    <form action="/{{org}}/evaluations" method="get" class="w3-container" autocomplete="off">
+    <form action="{{ url_for('evaluations', org=org) }}" method="get" class="w3-container" autocomplete="off">
         <input type="submit" value="To evaluations" class="w3-button"  />
     </form>
 
@@ -45,7 +45,7 @@
         {% for report in reports %}
         <tr>
             <td>{{report.report_date}}</td>
-            <td><a href='/{{org}}/items/{{report.item_id}}' > {{report.item_name}}</a></td>
+            <td><a href="{{ url_for('item_details', org=org, item_id=report.item_id) }}" > {{report.item_name}}</a></td>
             <td>{{report.report_class}}</td>
             <td>{{report.weight_min|int}} - {{report.weight_max|int}} </td>
             {% if org=='air-turquoise' %}            

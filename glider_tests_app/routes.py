@@ -1,8 +1,9 @@
+import os
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from . import views
 
-router = APIRouter()
+router = APIRouter(prefix=os.environ.get("GLIDER_TESTS_APP_ROOT_PATH", ""), tags=["glider-tests"])
 
 @router.get("/", response_class=HTMLResponse)
 async def index_route(request: Request):
