@@ -5,6 +5,16 @@
 {% endif %}
 
 {% block content %}
+<style>
+    .first-col {
+        width: 120px;
+        position: sticky;
+        left: 0;
+        background-color: #ffffff;
+        z-index: 10;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+</style>
 <form action="{{ url_for('evaluations', org=org) }}" method="get" class="w3-container" style="padding: 0.01em 5px" autocomplete="off">
     <button type="submit" class="btn btn-success" >
      <i class="fa fa-filter"></i> Filter table
@@ -17,9 +27,10 @@
         }
 
     </script>
+    <div style="overflow-x: auto;">
     <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
-            <th style="width: 120px;">Name<br />
+            <th class="first-col">Name<br />
             <input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" />
             <span  style="font-size: 0.8em; color: #666;">Hint: use comma separated values, e.g. "Ikuma 3, Artik 7"</span>
             </th>
@@ -29,13 +40,13 @@
         </tr>
         <tr>
         <tr>
-            <th style="width: 120px;">Weight range (kg)<br />
+            <th class="first-col">Weight range (kg)<br />
             <input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
             {% for i in range(evaluations.index|length) %}
                 <th>{{evaluations.index[i][2]|int}}-{{evaluations.index[i][3]|int}}</th>
             {% endfor %}
         </tr>
-            <th style="width: 120px;">Class<br />
+            <th class="first-col">Class<br />
             <input id="classification" name="classification" type="text" value="{{filter.classification}}" size="2" /></th>
             {% for i in range(evaluations.index|length) %}
                 <th>{{evaluations.index[i][1]}}</th>
@@ -43,7 +54,7 @@
         </tr>    
         {% for j in range(evaluations.columns|length) %}
         <tr>
-            <th style="width: 120px;" title="{{evaluations.columns[j][1]}}" onmouseover="showTitle(title)">{{evaluations.columns[j][1]}}</th>
+            <th class="first-col" title="{{evaluations.columns[j][1]}}" onmouseover="showTitle(title)">{{evaluations.columns[j][1]}}</th>
             {% for i in range(evaluations.index|length) %}
                 <td class="w3-center {{evaluations.data[i][j]}}" 
                     title="{{evaluations.columns[j][1]}}" 
@@ -52,6 +63,7 @@
             {% endfor %}
         </tr>
         {% endfor %}
-    </table>    
+    </table>
+    </div>
 </form>
 {% endblock %}
