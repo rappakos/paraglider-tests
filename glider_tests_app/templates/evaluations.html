@@ -15,38 +15,40 @@
         }
 
     </script>
-
     <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
-            <th>Class</th>
-            <th>Item name</th>
-            <th>Weight range (kg)</th>
-            {% for j in range(evaluations.columns|length) -%}
-                <!-- <th class="w3-center" style="writing-mode: vertical-rl;text-orientation: mixed;" >{{column}}</th> -->
-                <th class="w3-center" title="{{evaluations.columns[j][1]}}" onmouseover="showTitle(title)" >{{j+1}}.</th>
-            {%- endfor %}
+            <th>Class<br />
+            <input id="classification" name="classification" type="text" value="{{filter.classification}}" size="2" /></th>
+            {% for i in range([evaluations.index|length, 10]|min) %}
+                <th>{{evaluations.index[i][1]}}</th>
+            {% endfor %}
         </tr>
         <tr>
-            <th><input id="classification" name="classification" type="text" value="{{filter.classification}}" size="2" /></th>
-            <th><input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" /></th>
-            <th><input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
-            {% for j in range(evaluations.columns|length) -%}
-            <th colspan="{{evaluations.columns|length}}">    <div id="toolTip"></div></th>
-            {%- endfor %}
+            <th>Name<br />
+            <input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" /></th>
+            {% for i in range([evaluations.index|length, 10]|min) %}
+                <th>{{evaluations.index[i][0]}}</th>
+            {% endfor %}
         </tr>
-        {% for i in range(evaluations.index|length) %}
         <tr>
-            <th>{{evaluations.index[i][1]}}</th>
-            <th>{{evaluations.index[i][0]}}</th>
-            <th>{{evaluations.index[i][2]|int}} - {{evaluations.index[i][3]|int}}</th>
-            {% for j in range(evaluations.columns|length) %}
+            <th>Weight range (kg)<br />
+            <input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
+            {% for i in range([evaluations.index|length, 10]|min) %}
+                <th>{{evaluations.index[i][2]|int}}-{{evaluations.index[i][3]|int}}</th>
+            {% endfor %}
+        </tr>
+    
+        {% for j in range(evaluations.columns|length) %}
+        <tr>
+            <th title="{{evaluations.columns[j][1]}}" onmouseover="showTitle(title)">{{evaluations.columns[j][1]}}</th>
+            {% for i in range([evaluations.index|length, 10]|min) %}
                 <td class="w3-center {{evaluations.data[i][j]}}" 
                     title="{{evaluations.columns[j][1]}}" 
                     onmouseover="showTitle(title)"
-                    ontouchstart="showTitle(title)"  >{{evaluations.data[i][j]}}</td>
+                    ontouchstart="showTitle(title)">{{evaluations.data[i][j]}}</td>
             {% endfor %}
         </tr>
         {% endfor %}
-    </table>
+    </table>    
 </form>
 {% endblock %}
