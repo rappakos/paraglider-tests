@@ -177,32 +177,6 @@ class BaseGliderDataLoader:
         logger.info(f"Extracted {len(df)} rows with {len(df.columns)} columns")
         return df
         
-    async def extract_multiple_tables(
-        self,
-        selectors: List[str],
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> List[pd.DataFrame]:
-        """
-        Extract multiple tables from the current page.
-        
-        Args:
-            selectors: List of CSS selectors for table elements
-            metadata: Optional metadata to add to all extracted tables
-        
-        Returns:
-            List of DataFrames, one for each table
-        """
-        tables = []
-        for selector in selectors:
-            try:
-                df = await self.extract_table(selector, metadata)
-                if not df.empty:
-                    tables.append(df)
-            except Exception as e:
-                logger.warning(f"Failed to extract table with selector {selector}: {e}")
-        
-        return tables
-        
     async def scrape_glider_data(
         self,
         url: str,
