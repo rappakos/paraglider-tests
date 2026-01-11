@@ -5,9 +5,13 @@ Handles extraction of models from DB and coordination with loaders.
 
 import re
 import asyncio
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, Optional
 import pandas as pd
 from sqlalchemy import create_engine, text
+from manufacturer_data.specs_loader import OzoneSpecsLoader
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 DB_NAME = './glider_tests.db'
@@ -180,8 +184,62 @@ async def get_models_for_manufacturer(manufacturer: str) -> pd.DataFrame:
     return grouped
 
 
+def model_name_to_url_slug(model_name: str) -> str:
+    """
+    Convert model name to URL slug format.
+    
+    Args:
+        model_name: Model name (e.g., "Alpina 4")
+    
+    Returns:
+        URL slug (e.g., "alpina-4")
+    """
+    return model_name.lower().replace(' ', '-')
+
+async def load_specs(manufacturer: str) -> pd.DataFrame:
+    """
+    Load technical specifications for all models of a given manufacturer.
+    
+    Args:
+        manufacturer: Manufacturer name (e.g., 'Ozone', 'Advance')"""
+    if not manufacturer or manufacturer not in MANUFACTURER_ORG_MAP:
+        raise ValueError(f"Unsupported manufacturer: {manufacturer}")
+    
+    # get "open" models from DB
+    models_df = await get_models_for_manufacturer(manufacturer)
+    if models_df.empty:
+        logger.info("No models to be processed.")
+        return pd.DataFrame()
+
+    # Initialize loader based on manufacturer
+    loader = None
+    if manufacturer == 'Ozone':
+        loader = OzoneSpecsLoader(headless=True)
+
+    if loader is None:
+        raise ValueError(f"No loader available for manufacturer: {manufacturer}")
+
+    async with loader:
+        specs_list = []
+        for _, row in models_df.iterrows():
+            model_name = row['model']
+            url_slug = model_name_to_url_slug(model_name)
+            try:
+                specs_df = await loader.load_glider_specs(model=url_slug, glider_name=model_name)
+                if not specs_df.empty:
+                    specs_list.append(specs_df)
+                    logger.info(f"Loaded specs for {manufacturer} {model_name}")
+                else:
+                    logger.warning(f"No specs found for {manufacturer} {model_name}")
+            except Exception as e:
+                logger.error(f"Error loading specs for {manufacturer} {model_name}: {e}")
+
+
+    # temp
+    return models_df
+
 # Example usage
-async def main():
+async def get_models():
     """Example: Load all Ozone wing data from database"""
     print("\n=== Getting all Ozone wings from database ===")
 
@@ -197,6 +255,16 @@ async def main():
         print(f"\n\nUnique models: {len(models)}")
         print("\nModels with sizes:")
         print(models[['model', 'size_count', 'sizes']])
+
+async def main():
+    """Scrape manufacturer data"""
+    manufacturer = 'Ozone'
+    specs_df = await load_specs(manufacturer)
+    
+    if not specs_df.empty:
+        print("\n\n=== Sample of scraped data ===")
+        print(specs_df.head(10))
+        print("\n\nColumns:", specs_df.columns.tolist())
 
 
 if __name__ == '__main__':
