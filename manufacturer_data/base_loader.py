@@ -193,7 +193,8 @@ class BaseGliderDataLoader:
             return pd.Series()
         
         # Remove common units and convert to numeric
-        cleaned = df[column].astype(str).str.replace(r'[^\d.-]', '', regex=True)
+        # some EN pages still use DE decimal comma
+        cleaned = df[column].astype(str).str.replace(',', '.').replace(r'[^\d.-]', '', regex=True)
         return pd.to_numeric(cleaned, errors='coerce')
 
     def model_name_to_url_slug(self,model_name: str) -> str:

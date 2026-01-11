@@ -293,7 +293,16 @@ class NiviukSpecsLoader(BaseGliderDataLoader):
         
         return df
     
+    def model_name_to_url_slug(self, model_name):
+        slug = super().model_name_to_url_slug(model_name) 
 
+        overrides = {
+            'artik-r': 'not-found', # redirects to artik-r-2, cannot use
+            'artik-6': 'not-found', # redirects to artik-7-p, cannot use
+            'artik-r2': 'artik-r-2'
+        }
+
+        return overrides.get(slug, slug)
 
 # Example usage
 async def example_usage():

@@ -8,7 +8,7 @@ import asyncio
 from typing import Dict, Optional
 import pandas as pd
 from sqlalchemy import create_engine, text
-from manufacturer_data.specs_loader import OzoneSpecsLoader
+from manufacturer_data.specs_loader import OzoneSpecsLoader, AdvanceSpecsLoader, NiviukSpecsLoader
 
 import logging
 logger = logging.getLogger(__name__)
@@ -205,6 +205,10 @@ async def load_specs(manufacturer: str) -> pd.DataFrame:
     loader = None
     if manufacturer == 'Ozone':
         loader = OzoneSpecsLoader(headless=True)
+    if manufacturer == 'Advance':
+        loader = AdvanceSpecsLoader(headless=True)
+    if manufacturer == 'Niviuk':    
+        loader = NiviukSpecsLoader(headless=True)
 
     if loader is None:
         raise ValueError(f"No loader available for manufacturer: {manufacturer}")
@@ -258,7 +262,7 @@ async def get_models():
 
 async def main():
     """Scrape manufacturer data"""
-    manufacturer = 'Ozone'
+    manufacturer = 'Niviuk'
     specs_df = await load_specs(manufacturer)
     
     if not specs_df.empty:
