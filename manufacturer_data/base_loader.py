@@ -8,6 +8,7 @@ import logging
 from typing import Optional, Dict, List, Any
 from playwright.async_api import async_playwright, Browser, Page, Playwright
 import pandas as pd
+from io import StringIO
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -79,103 +80,71 @@ class BaseGliderDataLoader:
     async def extract_table(
         self,
         selector: str,
-        metadata: Optional[Dict[str, Any]] = None,
-        transpose: bool = False
+        skip_header_rows: int = 0,
+        skip_body_columns: int = 0,
+        metadata: Optional[Dict[str, Any]] = None
     ) -> pd.DataFrame:
         """
-        Extract a table from the current page.
+        Extract table data where sizes are in columns.
+        
+        This handles the common manufacturer pattern where:
+        - Header row contains size names (21, 23, XS, S, etc.)
+        - First column(s) contain parameter names
+        - Optional unit column after parameter name
+        - Data cells contain the values for each size
         
         Args:
-            selector: CSS selector for the table element
-            metadata: Optional metadata to add to the extracted data
-                     (e.g., {'glider_name': 'XXX', 'manufacturer': 'YYY'})
-            transpose: If True, transpose the table (useful when sizes are in columns)
+            selector: CSS selector for the table
+            skip_header_rows: Number of header rows to skip (default: 0)
+            skip_body_columns: Number of leftmost columns to skip in body rows (0=parameter name, 1=parameter+unit, etc.)
+            metadata: Optional metadata to add
         
         Returns:
-            DataFrame with extracted table data and optional metadata columns
+            DataFrame where each row is a size with columns for each parameter
         """
         if not self.page:
             raise RuntimeError("Browser not initialized. Call initialize() first.")
         
-        logger.info(f"Extracting table with selector: {selector}")
-        
-        # Wait for table to be present
+        logger.info(f"Extracting structured table with selector: {selector}")
         await self.page.wait_for_selector(selector, state="visible")
+   
+        # Get the table HTML
+        table_html = await self.page.locator(selector).evaluate('el => el.outerHTML')
         
-        # Extract table data using JavaScript
-        table_data = await self.page.evaluate("""
-            (selector) => {
-                const table = document.querySelector(selector);
-                if (!table) return null;
-                
-                // Try to find rows in thead and tbody separately
-                const theadRows = Array.from(table.querySelectorAll('thead tr'));
-                const tbodyRows = Array.from(table.querySelectorAll('tbody tr'));
-                const rows = theadRows.length > 0 || tbodyRows.length > 0 
-                    ? [...theadRows, ...tbodyRows]
-                    : Array.from(table.querySelectorAll('tr'));
-                
-                if (rows.length === 0) return null;
-                
-                const data = [];
-                
-                // Check if first row contains headers
-                const firstRow = rows[0];
-                const hasHeaders = firstRow.querySelector('th') !== null;
-                
-                let headers = [];
-                let dataStartIndex = 0;
-                
-                if (hasHeaders) {
-                    headers = Array.from(firstRow.querySelectorAll('th, td'))
-                        .map(cell => cell.textContent.trim());
-                    dataStartIndex = 1;
-                } else {
-                    // Generate generic headers if no headers found
-                    const cellCount = firstRow.querySelectorAll('td').length;
-                    headers = Array.from({length: cellCount}, (_, i) => `Column_${i + 1}`);
-                }
-                
-                // Extract data rows
-                for (let i = dataStartIndex; i < rows.length; i++) {
-                    const cells = Array.from(rows[i].querySelectorAll('td, th'));
-                    if (cells.length > 0) {
-                        const rowData = {};
-                        cells.forEach((cell, index) => {
-                            if (index < headers.length) {
-                                rowData[headers[index]] = cell.textContent.trim();
-                            }
-                        });
-                        data.push(rowData);
-                    }
-                }
-                
-                return {headers, data};
-            }
-        """, selector)
-        
-        if not table_data or not table_data['data']:
+        # Use pandas to read the HTML table
+        dfs = pd.read_html(StringIO(table_html))
+        if not dfs:
             logger.warning(f"No table found with selector: {selector}")
             return pd.DataFrame()
         
-        # Convert to DataFrame
-        df = pd.DataFrame(table_data['data'])
+        df = dfs[0]
         
-        # Transpose if requested (for tables where sizes are columns)
-        if transpose:
-            # First column becomes the index (parameter names)
-            first_col = df.columns[0]
-            df = df.set_index(first_col).T
-            df.index.name = 'Size'
-            df = df.reset_index()
+        # Header: skip first (skip_body_columns + 1) columns, rest are sizes
+        sizes = df.columns[skip_body_columns + 1:]
+        
+        # Body: first column is parameter name
+        param_col = df.columns[skip_header_rows]
+        
+        
+        # Transpose: each size becomes a row
+        rows = []
+        for size in sizes:
+            row = {'size': str(size)}
+            for idx, param_name in enumerate(df[param_col]):
+                if pd.notna(param_name) and str(param_name).strip():
+                    row[str(param_name)] = df[size].iloc[idx]
+            rows.append(row)        
+
+
+        result_df = pd.DataFrame(rows)
         
         # Add metadata columns if provided
         if metadata:
             for key, value in metadata.items():
-                df[key] = value
+                result_df[key] = value
         
-        logger.info(f"Extracted {len(df)} rows with {len(df.columns)} columns")
-        return df
+        logger.info(f"Extracted {len(result_df)} rows with {len(result_df.columns)} columns")
+        return result_df
         
     async def scrape_glider_data(
         self,
