@@ -19,3 +19,4 @@ Pillow
 pdf2image
 pytest
 httpx
+playwright>=1.40.0
