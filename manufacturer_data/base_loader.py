@@ -123,8 +123,17 @@ class BaseGliderDataLoader:
         sizes = df.columns[skip_body_columns + 1:]
         
         # Body: first column is parameter name
-        param_col = df.columns[skip_header_rows]
-        
+        param_col = df.columns[0]
+
+        # some values might be left empty for design reasons, we copy the previous row's parameter name and append a suffix
+        for idx, param_name in enumerate(df[param_col]):
+            if pd.isna(param_name) or str(param_name).strip() == '':
+                if idx > 0:
+                    df.at[idx, param_col] = f"{df.at[idx - 1, param_col]}*"
+                else:
+                    df.at[idx, param_col] = "unknown_param"
+
+        #print(f"Parameter column: {df[param_col].tolist()}")
         
         # Transpose: each size becomes a row
         rows = []

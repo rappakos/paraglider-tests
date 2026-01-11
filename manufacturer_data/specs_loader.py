@@ -17,6 +17,12 @@ MANUFACTURER_CONFIG = {
             'skip_header_rows': 0,
             'skip_body_columns': 1,  # Parameter name + unit column            
             'url_pattern': 'https://www.advance.swiss/en/products/paragliders/{model}'
+        },
+        'Niviuk': {
+            'table_selector': '#tabla_especificaciones',
+            'skip_header_rows': 0,
+            'skip_body_columns': 2,          
+            'url_pattern': 'https://niviuk.com/en/{model}'
         }
     }
 
@@ -212,20 +218,101 @@ class AdvanceSpecsLoader(BaseGliderDataLoader):
         
         return overrides.get(slug, slug)
 
+
+class NiviukSpecsLoader(BaseGliderDataLoader):
+    """Loader for Niviuk paraglider specifications"""
+    
+    def __init__(self, headless: bool = True):
+        super().__init__(headless=headless)
+        self.config = MANUFACTURER_CONFIG['Niviuk']
+        
+    async def load_glider_specs(self, model: str, glider_name: Optional[str] = None) -> pd.DataFrame:
+        """
+        Load specifications for a specific Niviuk glider model.
+        
+        Args:
+            model: Model identifier for URL (e.g., 'ikuma-3')
+            glider_name: Display name of the glider (defaults to model if not provided)"""
+        
+        url = self.config['url_pattern'].format(model=model)
+        
+        metadata = {
+            'glider_name': glider_name or model,
+            'manufacturer': 'Niviuk'
+        }
+        
+        df = await self.scrape_glider_data(
+            url=url,
+            table_selector=self.config['table_selector'],
+            skip_header_rows=self.config['skip_header_rows'],
+            skip_body_columns=self.config['skip_body_columns'],            
+            metadata=metadata
+        )
+        
+        # Apply Niviuk-specific transformations
+        df = self._normalize_niviuk_data(df)
+        
+        return df
+
+    def _normalize_niviuk_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Transform Niviuk-specific data to common schema.
+        """
+        if df.empty:
+            return df
+        
+        # Column name mappings (Niviuk -> Standard)
+        column_mapping = {
+            'Size': 'size',
+            'AREA': 'area_flat_m2',
+            'AREA*': 'area_projected_m2',  # empty header cell ?!
+            'SPAN': 'span_flat_m',
+            'SPAN*': 'span_projected_m',  # empty header cell ?!
+            'ASPECT RATIO': 'aspect_ratio_flat',
+            'ASPECT RATIO*': 'aspect_ratio_projected', # empty header cell ?!
+            'CHORD': 'chord_root_m',
+            'GLIDER WEIGHT': 'weight_kg',
+            'TOTAL WEIGHT IN FLIGHT': 'weight_range_kg',
+            'CELLS': 'cells',
+            'CERTIFICATION': 'certification'
+        }
+        
+        # Rename columns to standard names
+        df = df.rename(columns=column_mapping)
+        
+        # Convert numeric columns
+        numeric_columns = [
+            'cells', 'area_projected_m2', 'area_flat_m2',
+            'span_projected_m', 'span_flat_m', 'aspect_ratio_projected',
+            'aspect_ratio_flat', 'chord_root_m', 'weight_kg'
+        ]
+        
+        for col in numeric_columns:
+            if col in df.columns:
+                df[col] = self.clean_numeric_column(df, col)
+        
+        return df
+    
+
+
 # Example usage
 async def example_usage():
     """Example of loading Ozone glider specifications."""
     
-    async with OzoneSpecsLoader() as loader:
-        df = await loader.load_glider_specs('alpina-4', 'Alpina 4')
+    #async with OzoneSpecsLoader() as loader:
+    #    df = await loader.load_glider_specs('alpina-4', 'Alpina 4')
+    #    print(df)
+    #    print(f"\nStandardized columns: {df.columns.tolist()}")
+
+    #async with AdvanceSpecsLoader() as loader:
+    #    df = await loader.load_glider_specs('iota-dls', 'Iota DLS')
+    #    print(df)
+    #    print(f"\nStandardized columns: {df.columns.tolist()}")
+
+    async with NiviukSpecsLoader() as loader:       
+        df = await loader.load_glider_specs('ikuma-3', 'Ikuma 3')
         print(df)
         print(f"\nStandardized columns: {df.columns.tolist()}")
-
-    async with AdvanceSpecsLoader() as loader:
-        df = await loader.load_glider_specs('iota-dls', 'Iota DLS')
-        print(df)
-        print(f"\nStandardized columns: {df.columns.tolist()}")
-
 
 if __name__ == '__main__':
     import asyncio
