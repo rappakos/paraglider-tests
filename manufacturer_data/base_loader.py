@@ -21,13 +21,13 @@ class BaseGliderDataLoader:
     Subclasses should implement manufacturer-specific navigation and parsing logic.
     """
     
-    def __init__(self, headless: bool = True, timeout: int = 30000):
+    def __init__(self, headless: bool = True, timeout: int = 10000):
         """
         Initialize the loader.
         
         Args:
             headless: Run browser in headless mode (default: True)
-            timeout: Page load timeout in milliseconds (default: 30000)
+            timeout: Page load timeout in milliseconds (default: 10000)
         """
         self.headless = headless
         self.timeout = timeout
@@ -243,6 +243,17 @@ class BaseGliderDataLoader:
         cleaned = df[column].astype(str).str.replace(r'[^\d.-]', '', regex=True)
         return pd.to_numeric(cleaned, errors='coerce')
 
+    def model_name_to_url_slug(self,model_name: str) -> str:
+        """
+        Convert model name to URL slug format.
+        
+        Args:
+            model_name: Model name (e.g., "Alpina 4")
+        
+        Returns:
+            URL slug (e.g., "alpina-4")
+        """
+        return model_name.lower().replace(' ', '-')
 
 # Example usage
 async def example_usage():

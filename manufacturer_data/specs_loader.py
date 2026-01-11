@@ -101,6 +101,18 @@ class OzoneSpecsLoader(BaseGliderDataLoader):
         return df
 
 
+    def model_name_to_url_slug(self, model_name: str) -> str:
+
+        slug = super().model_name_to_url_slug(model_name)
+
+        overrides = {
+            'alta': 'alta-gt',
+            'delta4': 'delta-4',
+            'magnum4': 'magnum-4',
+        }
+
+        return overrides.get(slug, slug)
+
 # Example usage
 async def example_usage():
     """Example of loading Ozone glider specifications."""

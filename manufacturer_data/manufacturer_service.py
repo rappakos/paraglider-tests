@@ -184,17 +184,7 @@ async def get_models_for_manufacturer(manufacturer: str) -> pd.DataFrame:
     return grouped
 
 
-def model_name_to_url_slug(model_name: str) -> str:
-    """
-    Convert model name to URL slug format.
-    
-    Args:
-        model_name: Model name (e.g., "Alpina 4")
-    
-    Returns:
-        URL slug (e.g., "alpina-4")
-    """
-    return model_name.lower().replace(' ', '-')
+
 
 async def load_specs(manufacturer: str) -> pd.DataFrame:
     """
@@ -223,12 +213,22 @@ async def load_specs(manufacturer: str) -> pd.DataFrame:
         specs_list = []
         for _, row in models_df.iterrows():
             model_name = row['model']
-            url_slug = model_name_to_url_slug(model_name)
+            url_slug = loader.model_name_to_url_slug(model_name)
+            expected_size_count = row['size_count']
             try:
                 specs_df = await loader.load_glider_specs(model=url_slug, glider_name=model_name)
                 if not specs_df.empty:
-                    specs_list.append(specs_df)
-                    logger.info(f"Loaded specs for {manufacturer} {model_name}")
+                    actual_size_count = len(specs_df)
+                    specs_list.append(specs_df)                    
+                    logger.info(f"Loaded specs for {manufacturer} {model_name}: {actual_size_count} sizes")
+
+                    # Check if counts match
+                    if actual_size_count != expected_size_count:
+                        logger.warning(
+                            f"Size mismatch for {manufacturer} {model_name}: "
+                            f"expected {expected_size_count} sizes from DB, "
+                            f"but scraped {actual_size_count} sizes"
+                        )                    
                 else:
                     logger.warning(f"No specs found for {manufacturer} {model_name}")
             except Exception as e:
