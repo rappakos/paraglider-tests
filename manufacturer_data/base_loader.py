@@ -109,7 +109,7 @@ class BaseGliderDataLoader:
         await self.page.wait_for_selector(selector, state="visible")
    
         # Get the table HTML
-        table_html = await self.page.locator(selector).evaluate('el => el.outerHTML')
+        table_html = await self.page.locator(selector).first.evaluate('el => el.outerHTML')
         
         # Use pandas to read the HTML table
         dfs = pd.read_html(StringIO(table_html))
@@ -150,8 +150,9 @@ class BaseGliderDataLoader:
         self,
         url: str,
         table_selector: str,
+        skip_header_rows: int = 0,
+        skip_body_columns: int = 0,
         metadata: Optional[Dict[str, Any]] = None,
-        transpose: bool = False
     ) -> pd.DataFrame:
         """
         Convenience method to navigate to a page and extract table data.
@@ -166,7 +167,7 @@ class BaseGliderDataLoader:
             DataFrame with extracted data
         """
         await self.navigate_to(url)
-        return await self.extract_table(table_selector, metadata, transpose)
+        return await self.extract_table(table_selector, metadata=metadata, skip_header_rows=skip_header_rows, skip_body_columns=skip_body_columns)
         
     def clean_numeric_column(self, df: pd.DataFrame, column: str) -> pd.Series:
         """

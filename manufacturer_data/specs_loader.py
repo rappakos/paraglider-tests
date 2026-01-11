@@ -8,8 +8,15 @@ from typing import Optional
 MANUFACTURER_CONFIG = {
         'Ozone': {
             'table_selector': 'div.specs-table-wrapper table',
-            'transpose': True,
+            'skip_header_rows': 0,
+            'skip_body_columns': 0,  # Only parameter name in first column            
             'url_pattern': 'https://flyozone.com/paragliders/products/gliders/{model}'
+        },
+        'Advance': {
+            'table_selector': '#s-technical-data table',
+            'skip_header_rows': 0,
+            'skip_body_columns': 1,  # Parameter name + unit column            
+            'url_pattern': 'https://www.advance.swiss/en/products/paragliders/{model}'
         }
     }
 
@@ -36,15 +43,15 @@ class OzoneSpecsLoader(BaseGliderDataLoader):
         
         metadata = {
             'glider_name': glider_name or model,
-            'manufacturer': 'Ozone',
-            'scrape_date': pd.Timestamp.now()
+            'manufacturer': 'Ozone'
         }
         
         df = await self.scrape_glider_data(
             url=url,
             table_selector=self.config['table_selector'],
-            metadata=metadata,
-            transpose=self.config['transpose']
+            skip_header_rows=self.config['skip_header_rows'],
+            skip_body_columns=self.config['skip_body_columns'],            
+            metadata=metadata
         )
         
         # Apply Ozone-specific transformations
@@ -113,13 +120,109 @@ class OzoneSpecsLoader(BaseGliderDataLoader):
 
         return overrides.get(slug, slug)
 
+
+class AdvanceSpecsLoader(BaseGliderDataLoader):
+    """Loader for Advance paraglider specifications"""
+    
+    def __init__(self, headless: bool = True):
+        super().__init__(headless=headless)
+        self.config = MANUFACTURER_CONFIG['Advance']
+    
+    async def load_glider_specs(self, model: str, glider_name: Optional[str] = None) -> pd.DataFrame:
+        """
+        Load specifications for a specific Advance glider model.
+        
+        Args:
+            model: Model identifier for URL (e.g., 'iota-dls')
+            glider_name: Display name of the glider (defaults to model if not provided)
+        
+        Returns:
+            DataFrame with normalized specifications
+        """
+        url = self.config['url_pattern'].format(model=model)
+        
+        metadata = {
+            'glider_name': glider_name or model,
+            'manufacturer': 'Advance'
+        }
+        
+        df = await self.scrape_glider_data(
+            url=url,
+            table_selector=self.config['table_selector'],
+            skip_header_rows=self.config['skip_header_rows'],
+            skip_body_columns=self.config['skip_body_columns'],
+            metadata=metadata
+        )
+        
+        # Apply Advance-specific transformations
+        df = self._normalize_advance_data(df, metadata)
+        
+        return df
+    
+    def _normalize_advance_data(self, df: pd.DataFrame, metadata: dict) -> pd.DataFrame:
+        """
+        Transform Advance-specific data to common schema.
+        """
+        if df.empty:
+            return df
+        
+        result_df = df.copy()
+
+        # Column name mappings (Advance -> Standard)
+        column_mapping = {
+            'Size': 'size',
+            'Flat surface': 'area_flat_m2',
+            'Projected surface': 'area_projected_m2',
+            #'Ideal weight range': 'weight_range_ideal_kg',
+            'Certified takeoff weight': 'weight_range_kg',
+            'Glider weight': 'weight_kg',
+            #'Glider weight with light risers': 'weight_light_kg',
+            'Span': 'span_flat_m',
+            'Projected span': 'span_projected_m',
+            'Aspect ratio': 'aspect_ratio_flat',
+            'Projected aspect ratio': 'aspect_ratio_projected',
+            'Max. chord': 'chord_root_m',
+            'Number of cells': 'cells',
+            'Certification': 'certification'
+        }
+
+        result_df = result_df.rename(columns=column_mapping)
+
+        # Convert numeric columns
+        numeric_columns = [
+            'cells', 'area_projected_m2', 'area_flat_m2',
+            'span_projected_m', 'span_flat_m', 'aspect_ratio_projected',
+            'aspect_ratio_flat', 'chord_root_m', 'weight_kg'
+        ]
+
+        for col in numeric_columns:
+            if col in result_df.columns:
+                result_df[col] = self.clean_numeric_column(result_df, col)
+
+        return result_df    
+
+
+    def model_name_to_url_slug(self, model_name: str) -> str:
+        """Convert Advance model names to URL slugs."""
+        slug = super().model_name_to_url_slug(model_name)
+        
+        overrides = {
+            # Add Advance-specific overrides here
+        }
+        
+        return overrides.get(slug, slug)
+
 # Example usage
 async def example_usage():
     """Example of loading Ozone glider specifications."""
-    import asyncio
     
     async with OzoneSpecsLoader() as loader:
         df = await loader.load_glider_specs('alpina-4', 'Alpina 4')
+        print(df)
+        print(f"\nStandardized columns: {df.columns.tolist()}")
+
+    async with AdvanceSpecsLoader() as loader:
+        df = await loader.load_glider_specs('iota-dls', 'Iota DLS')
         print(df)
         print(f"\nStandardized columns: {df.columns.tolist()}")
 
