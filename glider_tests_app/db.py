@@ -200,9 +200,14 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                                         FROM split WHERE str!=''
                                     )
                             SELECT e.[item_name], p.weight_min, p.weight_max, l.std_test [test_name], max(upper(e.test_value)) [test_value], r.[report_class]
+                                , s.area_projected_m2
                             FROM dhv_evaluation e 
                             INNER JOIN dhv_reports r ON e.[item_name]=r.[item_name]
                             LEFT JOIN dhv_parameters p ON p.item_name=e.item_name
+                            LEFT JOIN glider_specs_normalized s ON 
+                                r.manufacturer = s.manufacturer AND 
+                                r.model = s.model AND 
+                                r.size = s.size                                      
                             INNER JOIN test_mapping as l ON e.test_name=l.dhv_test
                             inner join split s on e.item_name like s.[value]
                             WHERE :org in ('dhv','all')
@@ -211,9 +216,14 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                             GROUP BY  e.[item_name], p.weight_min, p.weight_max, l.std_test, r.[report_class] 
                             UNION ALL
                             SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value) [test_value], r.[report_class]
+                                , s.area_projected_m2
                             FROM air_turquoise_evaluation e 
                             INNER JOIN air_turquoise_reports r ON e.[item_name]=r.[item_name]
                             LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
+                            LEFT JOIN glider_specs_normalized s ON 
+                                r.manufacturer = s.manufacturer AND 
+                                r.model = s.model AND 
+                                r.size = s.size                            
                            inner join split s on e.item_name like s.[value]                            
                             WHERE :org in ('air-turquoise','all')
                                 AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))

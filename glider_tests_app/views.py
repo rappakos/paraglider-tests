@@ -125,7 +125,7 @@ async def evaluations(org: str, request: Request) -> HTMLResponse:
     if org in ORGS:
         evaluations = await db.get_evaluations(org, item_name, weight, classification)
 
-        pivoted = evaluations.set_index(['item_name','report_class','weight_min','weight_max','test_name']).unstack('test_name')
+        pivoted = evaluations.set_index(['item_name','report_class','weight_min','weight_max','area_projected_m2','test_name']).unstack('test_name')
         def sorter(name):
             return int(name[1].split('.')[0])
 
