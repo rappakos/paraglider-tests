@@ -232,7 +232,8 @@ async def load_specs(manufacturer: str) -> pd.DataFrame:
                             f"Size mismatch for {manufacturer} {model_name}: "
                             f"expected {expected_size_count} sizes from DB, "
                             f"but scraped {actual_size_count} sizes"
-                        )                    
+                        )
+
                 else:
                     logger.warning(f"No specs found for {manufacturer} {model_name}")
             except Exception as e:
@@ -262,7 +263,7 @@ async def get_models():
 
 async def main():
     """Scrape manufacturer data"""
-    manufacturer = 'Niviuk'
+    manufacturer = 'Ozone'
     specs_df = await load_specs(manufacturer)
     
     if not specs_df.empty:

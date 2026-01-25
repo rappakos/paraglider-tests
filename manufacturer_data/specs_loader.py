@@ -1,5 +1,6 @@
 
 
+from asyncio.log import logger
 from manufacturer_data.base_loader import BaseGliderDataLoader
 import pandas as pd
 from typing import Optional
@@ -45,6 +46,12 @@ class OzoneSpecsLoader(BaseGliderDataLoader):
         Returns:
             DataFrame with normalized specifications
         """
+
+        # Skip models that are not available
+        if model == 'not-found':
+            logger.info(f"Skipping {glider_name or model} - not available on website")
+            return pd.DataFrame()
+
         url = self.config['url_pattern'].format(model=model)
         
         metadata = {
@@ -122,6 +129,13 @@ class OzoneSpecsLoader(BaseGliderDataLoader):
             'alta': 'alta-gt',
             'delta4': 'delta-4',
             'magnum4': 'magnum-4',
+            'kona-2': 'not-found',  # Old model, no longer on website
+            'kona-3': 'not-found',  # Old model, no longer on website
+            'magmax-3': 'not-found',  # Old model, no longer on website
+            'mojo-pwr-2': 'not-found',  # Old model, no longer on website
+            'moxie-pwr': 'not-found',  # Old model, no longer on website
+            'power-ldt.-roadster-4': 'not-found',  # Invalid format
+            'zeolite-2-xd': 'not-found',  # Old variant, no longer on website            
         }
 
         return overrides.get(slug, slug)
