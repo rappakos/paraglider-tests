@@ -542,6 +542,61 @@ async def check_specs_freshness(manufacturer: str, model: str, max_age_days: int
         
         return age_days < max_age_days    
 
+async def populate_report_glider_fields(org: str = None):
+    """
+    Populate manufacturer, model, size columns in existing reports.
+    Run this once after adding the new columns.
+    
+    Args:
+        org: 'dhv', 'air-turquoise', or None for both
+    """
+    from manufacturer_data.manufacturer_service import normalize_manufacturer_name, extract_model_from_item_name
+    
+    async with aiosqlite.connect(DB_NAME) as db:
+        orgs = [org] if org else ['dhv', 'air_turquoise']
+        
+        for org_name in orgs:
+            table = f"{org_name}_reports"
+            
+            # Get all reports without manufacturer/model/size
+            cursor = await db.execute(f"""
+                SELECT item_name FROM {table}
+                WHERE manufacturer IS NULL OR model IS NULL OR size IS NULL
+            """)
+            reports = await cursor.fetchall()
+            
+            print(f"Processing {len(reports)} reports from {table}...")
+            
+            for (item_name,) in reports:
+                manufacturer = normalize_manufacturer_name(item_name)
+                if not manufacturer:
+                    continue
+                    
+                parsed = extract_model_from_item_name(item_name, manufacturer)
+                model = parsed['model']
+                size = parsed['size']
+                
+                if not model or not size:
+                    continue
+                
+                # Check if we have specs for this combination
+                spec_cursor = await db.execute("""
+                    SELECT 1 FROM glider_specs_normalized
+                    WHERE manufacturer = ? AND model = ? AND size = ?
+                    LIMIT 1
+                """, (manufacturer, model, size))
+                
+                has_specs = await spec_cursor.fetchone()
+                
+                if has_specs:
+                    await db.execute(f"""
+                        UPDATE {table}
+                        SET manufacturer = ?, model = ?, size = ?
+                        WHERE item_name = ?
+                    """, (manufacturer, model, size, item_name))
+
+            
+            await db.commit()
 
 if __name__ == '__main__':
     import asyncio

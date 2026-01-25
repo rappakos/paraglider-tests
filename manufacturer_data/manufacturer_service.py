@@ -129,13 +129,13 @@ async def get_all_wings_for_manufacturer(manufacturer: str) -> pd.DataFrame:
     query = f"""
         SELECT DISTINCT org, item_name, report_class
         FROM (
-            SELECT org, item_name, report_class FROM dhv_reports
-            WHERE :org = 'dhv'
+            SELECT :org as [org], item_name, report_class FROM dhv_reports
+            WHERE :org = 'dhv' AND model is null AND size is null
             UNION ALL
-            SELECT org, item_name, report_class FROM air_turquoise_reports
-            WHERE :org = 'air-turquoise'
+            SELECT :org as [org], item_name, report_class FROM air_turquoise_reports
+            WHERE :org = 'air-turquoise' AND model is null AND size is null
         )
-        WHERE {variant_conditions}
+        WHERE {variant_conditions} 
         ORDER BY item_name
     """
     
@@ -175,15 +175,33 @@ async def get_models_for_manufacturer(manufacturer: str) -> pd.DataFrame:
         return pd.DataFrame(columns=['manufacturer', 'model', 'size_count', 'sizes', 'example_item_name'])
     
     # Group by model to get size variations
-    grouped = df.groupby(['manufacturer', 'model']).agg({
+    grouped = df.groupby(['org','manufacturer', 'model']).agg({
         'size': ['count', lambda x: ', '.join(sorted(filter(None, set(x))))],
         'item_name': 'first'
     }).reset_index()
     
-    grouped.columns = ['manufacturer', 'model', 'size_count', 'sizes', 'example_item_name']
+    grouped.columns = ['org','manufacturer', 'model', 'size_count', 'sizes', 'example_item_name']
     
     return grouped
 
+async def link_reports_to_specs(manufacturer: str = None):
+    """
+    Populate manufacturer/model/size fields in reports tables.
+    Call this before loading specs to get the models list.
+    
+    Args:
+        manufacturer: Optional manufacturer filter, or None for all
+    """
+    from glider_tests_app.db import populate_report_glider_fields
+    
+    # Populate all reports or just one manufacturer
+    if manufacturer:
+        org = MANUFACTURER_ORG_MAP.get(manufacturer).replace('-', '_')
+        await populate_report_glider_fields(org)
+    else:
+        await populate_report_glider_fields()
+    
+    logger.info(f"Successfully populated report fields for {manufacturer or 'all manufacturers'}")
 
 
 
@@ -218,7 +236,7 @@ async def load_specs(manufacturer: str, force_refresh: bool = False) -> pd.DataF
         specs_list = []
         for _, row in models_df.iterrows():
             model_name = row['model']
-            
+           
             # Check if we need to scrape
             if not force_refresh and await check_specs_freshness(manufacturer, model_name):
                 logger.info(f"Using cached specs for {manufacturer} {model_name}")
@@ -250,6 +268,7 @@ async def load_specs(manufacturer: str, force_refresh: bool = False) -> pd.DataF
                     logger.info(f"Saved {count} size specs for {manufacturer} {model_name}")
                     
                     specs_list.append(specs_df)
+
                 else:
                     await save_raw_specs(
                         manufacturer=manufacturer,
@@ -307,6 +326,9 @@ async def main():
         print("\n\n=== Sample of scraped data ===")
         print(specs_df.head(10))
         print("\n\nColumns:", specs_df.columns.tolist())
+
+
+    await link_reports_to_specs(manufacturer)
 
 
 if __name__ == '__main__':

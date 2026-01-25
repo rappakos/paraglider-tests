@@ -153,7 +153,7 @@ CREATE INDEX IF NOT EXISTS idx_specs_normalized_lookup ON glider_specs_normalize
 CREATE INDEX IF NOT EXISTS idx_specs_normalized_area ON glider_specs_normalized(area_projected_m2);
 
 
-/* TODO
+
 -- Link test reports to glider specs
 ALTER TABLE dhv_reports ADD COLUMN manufacturer TEXT;
 ALTER TABLE dhv_reports ADD COLUMN model TEXT;
@@ -165,5 +165,3 @@ ALTER TABLE air_turquoise_reports ADD COLUMN size TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_dhv_reports_glider ON dhv_reports(manufacturer, model, size);
 CREATE INDEX IF NOT EXISTS idx_air_turquoise_reports_glider ON air_turquoise_reports(manufacturer, model, size);
-
-*/
