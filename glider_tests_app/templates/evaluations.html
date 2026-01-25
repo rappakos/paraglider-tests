@@ -39,11 +39,28 @@
             {% endfor %}
         </tr>
         <tr>
-        <tr>
             <th class="first-col">Weight range (kg)<br />
-            <input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
             {% for i in range(evaluations.index|length) %}
                 <th>{{evaluations.index[i][2]|int}}-{{evaluations.index[i][3]|int}}</th>
+            {% endfor %}                
+        </tr>
+        <tr>
+            <th class="first-col">Proj. surface (m²)<br />
+            {% for i in range(evaluations.index|length) %}
+                <th>{{ evaluations.index[i][4] if evaluations.index[i][4] == evaluations.index[i][4] else '' }}</th>
+            {% endfor %}                
+        </tr>        
+        <tr>
+            <th class="first-col">Takeoff Weight (kg) => Wing load<br />
+            <input id="weight" name="weight" type="text" value="{{filter.weight}}" size="2" /></th>
+            {% for i in range(evaluations.index|length) %}
+                <th>
+                    {% if filter.weight and evaluations.index[i][4] and evaluations.index[i][4] == evaluations.index[i][4] and evaluations.index[i][4] > 0 %}
+                        {{ "%.2f"|format(filter.weight|float / evaluations.index[i][4]) }}
+                    {% else %}
+                        
+                    {% endif %}
+                </th>
             {% endfor %}
         </tr>
             <th class="first-col">Class<br />
