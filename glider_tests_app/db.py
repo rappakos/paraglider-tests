@@ -2,6 +2,9 @@
 import aiosqlite
 from sqlalchemy import create_engine,text
 from pandas import DataFrame, read_sql_query
+import json
+from datetime import datetime
+from typing import Optional, Dict, List, Tuple
 
 DB_NAME = './glider_tests.db'
 INIT_SCRIPT = './glider_tests_app/init_db.sql'
@@ -380,6 +383,165 @@ async def save_download_link(report_link, download_link):
                 """, (download_link, report_link))             
 
         await db.commit()
+
+
+async def save_raw_specs(manufacturer: str, model: str, raw_data: dict, 
+                   scrape_status: str, url: str, error_message: Optional[str] = None) -> int:
+    """
+    Save raw scraped specifications to database.
+    
+    Args:
+        manufacturer: Manufacturer name (e.g., 'Ozone')
+        model: Model name (e.g., 'Alpina 4')
+        raw_data: Dictionary containing raw scraped data
+        scrape_status: Status of scrape ('success', 'not_found', 'timeout', 'parse_error', 'error')
+        url: URL that was scraped
+        error_message: Error message if scrape failed
+    
+    Returns:
+        ID of inserted record
+    """
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute("""
+            INSERT INTO glider_specs_raw 
+            (manufacturer, model, raw_json_data, scrape_status, url, error_message)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            manufacturer,
+            model,
+            json.dumps(raw_data),
+            scrape_status,
+            url,
+            error_message
+        ))
+        
+        await db.commit()
+        return cursor.lastrowid
+
+
+async def save_normalized_specs(manufacturer: str, model: str, specs_df: DataFrame) -> int:
+    """
+    Save normalized specifications to database.
+    
+    Args:
+        manufacturer: Manufacturer name
+        model: Model name
+        specs_df: DataFrame with normalized specifications (one row per size)
+    
+    Returns:
+        Number of records inserted/updated
+    """
+    async with aiosqlite.connect(DB_NAME) as db:
+        count = 0
+        
+        for _, row in specs_df.iterrows():
+            # Extract values, handling missing columns gracefully
+            await db.execute("""
+                INSERT INTO glider_specs_normalized 
+                (manufacturer, model, size, area_projected_m2, area_flat_m2, 
+                 span_projected_m, span_flat_m, aspect_ratio_projected, aspect_ratio_flat,
+                 chord_root_m, cells, weight_kg, weight_range_kg, certification)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(manufacturer, model, size) DO UPDATE SET
+                    area_projected_m2 = excluded.area_projected_m2,
+                    area_flat_m2 = excluded.area_flat_m2,
+                    span_projected_m = excluded.span_projected_m,
+                    span_flat_m = excluded.span_flat_m,
+                    aspect_ratio_projected = excluded.aspect_ratio_projected,
+                    aspect_ratio_flat = excluded.aspect_ratio_flat,
+                    chord_root_m = excluded.chord_root_m,
+                    cells = excluded.cells,
+                    weight_kg = excluded.weight_kg,
+                    weight_range_kg = excluded.weight_range_kg,
+                    certification = excluded.certification,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (
+                manufacturer,
+                model,
+                row.get('size', ''),
+                row.get('area_projected_m2'),
+                row.get('area_flat_m2'),
+                row.get('span_projected_m'),
+                row.get('span_flat_m'),
+                row.get('aspect_ratio_projected'),
+                row.get('aspect_ratio_flat'),
+                row.get('chord_root_m'),
+                row.get('cells'),
+                row.get('weight_kg'),
+                row.get('weight_range_kg'),
+                row.get('certification')
+            ))
+            count += 1
+        
+        await db.commit()
+        return count
+
+
+async def get_specs_for_model(manufacturer: str, model: str, size: Optional[str] = None) -> DataFrame:
+    """
+    Get normalized specifications for a model.
+    
+    Args:
+        manufacturer: Manufacturer name
+        model: Model name
+        size: Optional size filter
+    
+    Returns:
+        DataFrame with specifications
+    """
+    engine = create_engine(f'sqlite:///{DB_NAME}')
+    with engine.connect() as db:
+        query = """
+            SELECT * FROM glider_specs_normalized
+            WHERE manufacturer = :manufacturer AND model = :model
+        """
+        params = {'manufacturer': manufacturer, 'model': model}
+        
+        if size:
+            query += " AND size = :size"
+            params['size'] = size
+        
+        query += " ORDER BY size"
+        
+        df = read_sql_query(text(query), db, params=params)
+        return df
+
+
+async def check_specs_freshness(manufacturer: str, model: str, max_age_days: int = 30) -> bool:
+    """
+    Check if specs exist and are fresh enough.
+    
+    Args:
+        manufacturer: Manufacturer name
+        model: Model name
+        max_age_days: Maximum age in days before re-scraping
+    
+    Returns:
+        True if specs exist and are fresh, False otherwise
+    """
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute("""
+            SELECT scrape_timestamp, scrape_status
+            FROM glider_specs_raw
+            WHERE manufacturer = ? AND model = ?
+            ORDER BY scrape_timestamp DESC
+            LIMIT 1
+        """, (manufacturer, model))
+        
+        result = await cursor.fetchone()
+        if not result:
+            return False
+        
+        timestamp, status = result
+        if status != 'success':
+            return False
+        
+        # Check age
+        scrape_date = datetime.fromisoformat(timestamp)
+        age_days = (datetime.now() - scrape_date).days
+        
+        return age_days < max_age_days    
+
 
 if __name__ == '__main__':
     import asyncio
