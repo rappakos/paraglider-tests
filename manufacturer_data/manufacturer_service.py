@@ -8,6 +8,7 @@ import asyncio
 from typing import Dict, Optional
 import pandas as pd
 from sqlalchemy import create_engine, text
+from glider_tests_app.db import check_specs_freshness, get_specs_for_model, save_normalized_specs, save_raw_specs
 from manufacturer_data.specs_loader import OzoneSpecsLoader, AdvanceSpecsLoader, NiviukSpecsLoader
 
 import logging
@@ -126,12 +127,12 @@ async def get_all_wings_for_manufacturer(manufacturer: str) -> pd.DataFrame:
     
     # Query to get all items for this manufacturer
     query = f"""
-        SELECT DISTINCT item_name, report_class
+        SELECT DISTINCT org, item_name, report_class
         FROM (
-            SELECT item_name, report_class FROM dhv_reports
+            SELECT org, item_name, report_class FROM dhv_reports
             WHERE :org = 'dhv'
             UNION ALL
-            SELECT item_name, report_class FROM air_turquoise_reports
+            SELECT org, item_name, report_class FROM air_turquoise_reports
             WHERE :org = 'air-turquoise'
         )
         WHERE {variant_conditions}
@@ -186,7 +187,7 @@ async def get_models_for_manufacturer(manufacturer: str) -> pd.DataFrame:
 
 
 
-async def load_specs(manufacturer: str) -> pd.DataFrame:
+async def load_specs(manufacturer: str, force_refresh: bool = False) -> pd.DataFrame:
     """
     Load technical specifications for all models of a given manufacturer.
     
@@ -217,27 +218,63 @@ async def load_specs(manufacturer: str) -> pd.DataFrame:
         specs_list = []
         for _, row in models_df.iterrows():
             model_name = row['model']
+            
+            # Check if we need to scrape
+            if not force_refresh and await check_specs_freshness(manufacturer, model_name):
+                logger.info(f"Using cached specs for {manufacturer} {model_name}")
+                cached_specs = await get_specs_for_model(manufacturer, model_name)
+                if not cached_specs.empty:
+                    specs_list.append(cached_specs)
+                    continue
+            
+            # Scrape new specs
             url_slug = loader.model_name_to_url_slug(model_name)
-            expected_size_count = row['size_count']
+            url = loader.config['url_pattern'].format(model=url_slug)
+            
             try:
                 specs_df = await loader.load_glider_specs(model=url_slug, glider_name=model_name)
+                
                 if not specs_df.empty:
-                    actual_size_count = len(specs_df)
-                    specs_list.append(specs_df)                    
-                    logger.info(f"Loaded specs for {manufacturer} {model_name}: {actual_size_count} sizes")
-
-                    # Check if counts match
-                    if actual_size_count != expected_size_count:
-                        logger.warning(
-                            f"Size mismatch for {manufacturer} {model_name}: "
-                            f"expected {expected_size_count} sizes from DB, "
-                            f"but scraped {actual_size_count} sizes"
-                        )
-
+                    # Save raw data
+                    raw_data = specs_df.to_dict('records') # this is not the actual raw data...
+                    await save_raw_specs(
+                        manufacturer=manufacturer,
+                        model=model_name,
+                        raw_data={'specs': raw_data, 'columns': list(specs_df.columns)},
+                        scrape_status='success',
+                        url=url
+                    )
+                    
+                    # Save normalized data
+                    count = await save_normalized_specs(manufacturer, model_name, specs_df)
+                    logger.info(f"Saved {count} size specs for {manufacturer} {model_name}")
+                    
+                    specs_list.append(specs_df)
                 else:
+                    await save_raw_specs(
+                        manufacturer=manufacturer,
+                        model=model_name,
+                        raw_data={},
+                        scrape_status='not_found',
+                        url=url,
+                        error_message='No specifications found on page'
+                    )
                     logger.warning(f"No specs found for {manufacturer} {model_name}")
+                    
             except Exception as e:
-                logger.error(f"Error loading specs for {manufacturer} {model_name}: {e}")
+                error_msg = str(e)
+                status = 'timeout' if 'Timeout' in error_msg else 'error'
+                
+                await save_raw_specs(
+                    manufacturer=manufacturer,
+                    model=model_name,
+                    raw_data={},
+                    scrape_status=status,
+                    url=url,
+                    error_message=error_msg
+                )
+                logger.error(f"Error loading specs for {manufacturer} {model_name}: {error_msg}")
+
 
 
     # temp
