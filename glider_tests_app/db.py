@@ -9,7 +9,8 @@ START_DATE = '2020-01-01' # do not load earlier tests
 
 
 async def setup_db(app):
-    app['DB_NAME'] = DB_NAME
+    if app:
+        app['DB_NAME'] = DB_NAME
     async with aiosqlite.connect(DB_NAME) as db:
         # only test
         async with db.execute("SELECT 1") as cursor:
@@ -379,3 +380,7 @@ async def save_download_link(report_link, download_link):
                 """, (download_link, report_link))             
 
         await db.commit()
+
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(setup_db(None))

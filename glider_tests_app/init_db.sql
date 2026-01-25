@@ -110,3 +110,60 @@ update air_turquoise_evaluation
  set test_name = '15. Directional control with a maintained'
  where test_name like '15. Directional control with a maintained%'
        and not test_name = '15. Directional control with a maintained';
+
+
+CREATE TABLE IF NOT EXISTS glider_specs_raw (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    manufacturer TEXT NOT NULL,
+    model TEXT NOT NULL,
+    scrape_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    raw_json_data TEXT NOT NULL,  -- JSON string of the raw scraped data
+    scrape_status TEXT NOT NULL CHECK(scrape_status IN ('success', 'not_found', 'timeout', 'parse_error', 'error')),
+    error_message TEXT,
+    url TEXT,
+    UNIQUE(manufacturer, model, scrape_timestamp)
+);
+
+CREATE INDEX IF NOT EXISTS idx_specs_raw_lookup ON glider_specs_raw(manufacturer, model, scrape_status);
+CREATE INDEX IF NOT EXISTS idx_specs_raw_timestamp ON glider_specs_raw(scrape_timestamp);
+
+-- Normalized specifications for querying
+CREATE TABLE IF NOT EXISTS glider_specs_normalized (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    manufacturer TEXT NOT NULL,
+    model TEXT NOT NULL,
+    size TEXT NOT NULL,
+    area_projected_m2 REAL,
+    area_flat_m2 REAL,
+    span_projected_m REAL,
+    span_flat_m REAL,
+    aspect_ratio_projected REAL,
+    aspect_ratio_flat REAL,
+    chord_root_m REAL,
+    cells INTEGER,
+    weight_kg REAL,
+    weight_range_kg TEXT,  -- Keep as text for ranges like "75-95" or "85-105"
+    certification TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(manufacturer, model, size)
+);
+
+CREATE INDEX IF NOT EXISTS idx_specs_normalized_lookup ON glider_specs_normalized(manufacturer, model);
+CREATE INDEX IF NOT EXISTS idx_specs_normalized_area ON glider_specs_normalized(area_projected_m2);
+
+
+/* TODO
+-- Link test reports to glider specs
+ALTER TABLE dhv_reports ADD COLUMN manufacturer TEXT;
+ALTER TABLE dhv_reports ADD COLUMN model TEXT;
+ALTER TABLE dhv_reports ADD COLUMN size TEXT;
+
+ALTER TABLE air_turquoise_reports ADD COLUMN manufacturer TEXT;
+ALTER TABLE air_turquoise_reports ADD COLUMN model TEXT;
+ALTER TABLE air_turquoise_reports ADD COLUMN size TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_dhv_reports_glider ON dhv_reports(manufacturer, model, size);
+CREATE INDEX IF NOT EXISTS idx_air_turquoise_reports_glider ON air_turquoise_reports(manufacturer, model, size);
+
+*/
