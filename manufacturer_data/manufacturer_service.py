@@ -8,7 +8,7 @@ import asyncio
 from typing import Dict, Optional
 import pandas as pd
 from sqlalchemy import create_engine, text
-from glider_tests_app.db import check_specs_freshness, get_specs_for_model, save_normalized_specs, save_raw_specs
+from glider_tests_app.db import check_specs_freshness, get_specs_for_model, save_normalized_specs, save_raw_specs, check_open_items
 from manufacturer_data.specs_loader import OzoneSpecsLoader, AdvanceSpecsLoader, NiviukSpecsLoader
 
 import logging
@@ -130,10 +130,10 @@ async def get_all_wings_for_manufacturer(manufacturer: str) -> pd.DataFrame:
         SELECT DISTINCT org, item_name, report_class
         FROM (
             SELECT :org as [org], item_name, report_class FROM dhv_reports
-            WHERE :org = 'dhv' AND model is null AND size is null
+            WHERE :org = 'dhv'  -- AND model is null AND size is null
             UNION ALL
             SELECT :org as [org], item_name, report_class FROM air_turquoise_reports
-            WHERE :org = 'air-turquoise' AND model is null AND size is null
+            WHERE :org = 'air-turquoise' -- AND model is null AND size is null
         )
         WHERE {variant_conditions} 
         ORDER BY item_name
@@ -232,6 +232,9 @@ async def load_specs(manufacturer: str, force_refresh: bool = False) -> pd.DataF
     if loader is None:
         raise ValueError(f"No loader available for manufacturer: {manufacturer}")
 
+
+    #models_df = models_df[models_df['model'].str.contains('Alpina')]
+
     async with loader:
         specs_list = []
         for _, row in models_df.iterrows():
@@ -319,8 +322,8 @@ async def get_models():
 
 async def main():
     """Scrape manufacturer data"""
-    manufacturer = 'Ozone'
-    specs_df = await load_specs(manufacturer)
+    manufacturer = 'Niviuk'
+    specs_df = await load_specs(manufacturer, force_refresh=True)
     
     if not specs_df.empty:
         print("\n\n=== Sample of scraped data ===")
@@ -330,6 +333,15 @@ async def main():
 
     await link_reports_to_specs(manufacturer)
 
+async def check_items():
+
+    return await check_open_items()
+
+
+
 
 if __name__ == '__main__':
     asyncio.run(main())
+
+    df = asyncio.run(check_items())
+    print(df)

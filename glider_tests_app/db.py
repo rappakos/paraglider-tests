@@ -211,12 +211,13 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                             INNER JOIN test_mapping as l ON e.test_name=l.dhv_test
                             inner join split s on e.item_name like s.[value]
                             WHERE :org in ('dhv','all')
-                                AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))
+                                AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
                                 AND({class_filter})
                             GROUP BY  e.[item_name], p.weight_min, p.weight_max, l.std_test, r.[report_class] 
                             UNION ALL
                             SELECT e.[item_name], p.weight_min, p.weight_max, e.test_name, upper(e.test_value) [test_value], r.[report_class]
-                                , s.area_projected_m2
+                                -- Niviuk seems to be parsed incorrectly
+                                , CASE WHEN s.area_projected_m2 > 1000 THEN s.area_projected_m2 * 0.01 ELSE s.area_projected_m2 END as area_projected_m2
                             FROM air_turquoise_evaluation e 
                             INNER JOIN air_turquoise_reports r ON e.[item_name]=r.[item_name]
                             LEFT JOIN air_turquoise_parameters p ON p.item_name=e.item_name
@@ -226,7 +227,7 @@ async def get_evaluations(org:str,item_name:str, weight: str,classification:str)
                                 r.size = s.size                            
                            inner join split s on e.item_name like s.[value]                            
                             WHERE :org in ('air-turquoise','all')
-                                AND (:w=0 OR (:w >= 0.5*(IFNULL(p.weight_min,0)+IFNULL(p.weight_max,0)) and :w <= IFNULL(p.weight_max,0)))
+                                AND (:w=0 OR (:w >= IFNULL(p.weight_min,0) and :w <= IFNULL(p.weight_max,0)))
                                 AND({class_filter})
                         """), db, params=param)                
         return df
@@ -607,6 +608,27 @@ async def populate_report_glider_fields(org: str = None):
 
             
             await db.commit()
+
+
+async def check_open_items():
+
+    sql = """
+            select r.item_name, r.manufacturer, r.model, r.size, s.area_projected_m2
+              from air_turquoise_reports r
+              left join glider_specs_normalized s
+                    on r.manufacturer = s.manufacturer
+                and r.model = s.model
+                and r.size = s.size
+              where item_name like "ozone%alpina%"
+            """
+    
+    engine = create_engine(f'sqlite:///{DB_NAME}')
+    with engine.connect() as db:
+        param = {}
+        df  = read_sql_query(text(sql), db, params=param)
+
+        return df
+        
 
 if __name__ == '__main__':
     import asyncio

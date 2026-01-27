@@ -133,7 +133,7 @@ class BaseGliderDataLoader:
                 else:
                     df.at[idx, param_col] = "unknown_param"
 
-        #print(f"Parameter column: {df[param_col].tolist()}")
+        logger.info(f"Parameter column: {df[param_col].tolist()}")
         
         # Transpose: each size becomes a row
         rows = []

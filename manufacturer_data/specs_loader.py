@@ -85,18 +85,39 @@ class OzoneSpecsLoader(BaseGliderDataLoader):
             return df
         
         # Column name mappings (Ozone -> Standard)
+        # Handle multiple variations in column names across different models
         column_mapping = {
             'Sizes': 'size',
             'Number of Cells': 'cells',
+            # Projected area variations
             'Projected area (m2)': 'area_projected_m2',
+            'Projected Area (m2)': 'area_projected_m2',
+            'Projected area (m²)': 'area_projected_m2',
+            'Projected Area (m²)': 'area_projected_m2',
+            # Flat area variations
             'Flat Area (m^2)': 'area_flat_m2',
+            'Flat Area (m2)': 'area_flat_m2',
+            'Flat Area (m²)': 'area_flat_m2',
+            # Span variations
             'Projected Span (m)': 'span_projected_m',
             'Flat Span (m)': 'span_flat_m',
+            # Aspect ratio variations
             'Projected Aspect Ratio': 'aspect_ratio_projected',
             'Flat Aspect Ratio': 'aspect_ratio_flat',
+            # Other measurements
             'Root Chord (m)': 'chord_root_m',
+            # Weight variations
             'Glider Weight* (kg)': 'weight_kg',
+            'Glider Weight (kg)*': 'weight_kg',
+            'Glider Weight (kg)': 'weight_kg',
+            # Weight range variations
             'Certified Weight Range (kg)': 'weight_range_kg',
+            'Certified Weight Range (kg)**': 'weight_range_kg',
+            'In-flight Weight Range (kg)': 'weight_range_kg',
+            'In-flight Weight Range (kg)**': 'weight_range_kg',
+            'Recommend Flying Weight (kg)': 'weight_range_recommended',
+            'Recommended Flying Weight (kg)': 'weight_range_recommended',
+            # Certification
             'Certification': 'certification'
         }
         
@@ -159,6 +180,12 @@ class AdvanceSpecsLoader(BaseGliderDataLoader):
         Returns:
             DataFrame with normalized specifications
         """
+
+        # Skip models that are not available
+        if model == 'not-found' or 'extended' in model or 'c.-2025' in model:
+            logger.info(f"Skipping {glider_name or model} - not available on website")
+            return pd.DataFrame()
+
         url = self.config['url_pattern'].format(model=model)
         
         metadata = {
@@ -228,6 +255,15 @@ class AdvanceSpecsLoader(BaseGliderDataLoader):
         
         overrides = {
             # Add Advance-specific overrides here
+            'alpha-7': 'not-found',
+            'alpha-8-dls': 'alpha-series/alpha-dls',
+            'epsilon-10-dls': 'epsilon-dls',
+            'iota-3-dls': 'iota-dls',
+            'pi-3': 'not-found',
+            'pi-4': 'pi-uls',
+            'sigma-12-dls': 'sigma-dls',
+            'sigma-11': 'not-found',
+            'omega-xa-5-uls': 'omega-uls'
         }
         
         return overrides.get(slug, slug)
@@ -248,6 +284,11 @@ class NiviukSpecsLoader(BaseGliderDataLoader):
             model: Model identifier for URL (e.g., 'ikuma-3')
             glider_name: Display name of the glider (defaults to model if not provided)"""
         
+        # Skip models that are not available
+        if model == 'not-found' or 'extended' in model:
+            logger.info(f"Skipping {glider_name or model} - not available on website")
+            return pd.DataFrame()
+
         url = self.config['url_pattern'].format(model=model)
         
         metadata = {
@@ -313,7 +354,12 @@ class NiviukSpecsLoader(BaseGliderDataLoader):
         overrides = {
             'artik-r': 'not-found', # redirects to artik-r-2, cannot use
             'artik-6': 'not-found', # redirects to artik-7-p, cannot use
-            'artik-r2': 'artik-r-2'
+            'artik-r2': 'artik-r-2',
+            'ikuma-2': 'not-found',
+            'ikuma-2-p': 'not-found',
+            'kode-p': 'not-found',
+            'koyot-4': 'not-found',
+            'takoo-5': 'not-found',
         }
 
         return overrides.get(slug, slug)
