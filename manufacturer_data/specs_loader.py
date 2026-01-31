@@ -24,6 +24,12 @@ MANUFACTURER_CONFIG = {
             'skip_header_rows': 0,
             'skip_body_columns': 2,          
             'url_pattern': 'https://niviuk.com/en/{model}'
+        },
+        'Skywalk': {
+            'table_selector': 'table[id^="tablepress-"]',
+            'skip_header_rows': 1,
+            'skip_body_columns': 1,          
+            'url_pattern': 'https://www.skywalk.info/project/{model}/'
         }
     }
 
@@ -364,6 +370,120 @@ class NiviukSpecsLoader(BaseGliderDataLoader):
 
         return overrides.get(slug, slug)
 
+
+class SkywalkSpecsLoader(BaseGliderDataLoader):
+    """Loader for Skywalk paraglider specifications"""
+    
+    def __init__(self, headless: bool = True):
+        super().__init__(headless=headless)
+        self.config = MANUFACTURER_CONFIG['Skywalk']
+    
+    async def load_glider_specs(self, model: str, glider_name: Optional[str] = None) -> pd.DataFrame:
+        """
+        Load specifications for a specific Skywalk glider model.
+        
+        Args:
+            model: Model identifier for URL (e.g., 'cayenne-7')
+            glider_name: Display name of the glider (defaults to model if not provided)
+        
+        Returns:
+            DataFrame with normalized specifications
+        """
+
+        # Skip models that are not available
+        if model == 'not-found':
+            logger.warning(f"Skipping unavailable model: {model}")
+            return pd.DataFrame()
+
+        url = self.config['url_pattern'].format(model=model)
+        
+        metadata = {
+            'glider_name': glider_name or model,
+            'manufacturer': 'Skywalk'
+        }
+        
+        df = await self.scrape_glider_data(
+            url=url,
+            table_selector=self.config['table_selector'],
+            skip_header_rows=self.config['skip_header_rows'],
+            skip_body_columns=self.config['skip_body_columns'],
+            metadata=metadata
+        )
+        
+        # Apply Skywalk-specific transformations
+        df = self._normalize_skywalk_data(df)
+        
+        return df
+    
+    def _normalize_skywalk_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Transform Skywalk-specific data to common schema.
+        
+        Handles:
+        - Column name standardization
+        - Unit conversions
+        - Data type corrections
+        """
+        if df.empty:
+            return df
+        
+        result_df = df.copy()
+
+        # Column name mappings (Skywalk -> Standard)
+        column_mapping = {
+            'Size': 'size',
+            'Cell number': 'cells',
+            'Area flat (m²)': 'area_flat_m2',
+            'Area projected (m²)': 'area_projected_m2',
+            'Wingspan flat (m)': 'span_flat_m',
+            'Wingspan projected (m)': 'span_projected_m',
+            'Aspect ratio flat': 'aspect_ratio_flat',
+            'Aspect ratio projected': 'aspect_ratio_projected',
+            'min. profile depth (cm)': 'profile_depth_min_cm',
+            'max. profile depth (cm)': 'profile_depth_max_cm',
+            'Weight (kg)': 'weight_kg',
+            'Certified take-off weight (kg)': 'weight_range_kg',
+            'Homologation': 'certification'
+        }
+        
+        # Rename columns to standard names
+        result_df = result_df.rename(columns=column_mapping)
+        
+        # Uppercase size values if present
+        #if 'size' in result_df.columns:
+        #    result_df['size'] = result_df['size'].astype(str).str.upper()
+        
+        # Convert numeric columns
+        numeric_columns = [
+            'cells', 'area_flat_m2', 'area_projected_m2',
+            'span_flat_m', 'span_projected_m', 'aspect_ratio_flat',
+            'aspect_ratio_projected', 'profile_depth_min_cm', 
+            'profile_depth_max_cm', 'weight_kg'
+        ]
+        
+        for col in numeric_columns:
+            if col in result_df.columns:
+                result_df[col] = self.clean_numeric_column(result_df, col)
+        
+        return result_df
+    
+    def model_name_to_url_slug(self, model_name: str) -> str:
+        """Convert Skywalk model names to URL slugs."""
+        slug = super().model_name_to_url_slug(model_name)
+        
+        # Remove the last dash (usually before version number)
+        # e.g., 'chili-5' -> 'chili5'
+        if '-' in slug:
+            last_dash_idx = slug.rfind('-')
+            slug = slug[:last_dash_idx] + slug[last_dash_idx+1:]
+        
+        overrides = {
+            # Add Skywalk-specific overrides here as needed
+        }
+        
+        return overrides.get(slug, slug)
+
+
 # Example usage
 async def example_usage():
     """Example of loading Ozone glider specifications."""
@@ -378,10 +498,18 @@ async def example_usage():
     #    print(df)
     #    print(f"\nStandardized columns: {df.columns.tolist()}")
 
-    async with NiviukSpecsLoader() as loader:       
-        df = await loader.load_glider_specs('ikuma-3', 'Ikuma 3')
+    #async with NiviukSpecsLoader() as loader:       
+    #    df = await loader.load_glider_specs('ikuma-3', 'Ikuma 3')
+    #    print(df)
+    #    print(f"\nStandardized columns: {df.columns.tolist()}")
+
+    async with SkywalkSpecsLoader() as loader:
+        df = await loader.load_glider_specs('chili5', 'Chili 5')
         print(df)
         print(f"\nStandardized columns: {df.columns.tolist()}")
+        df = await loader.load_glider_specs('arak-air2', 'Arak Air 2')
+        print(df)
+        print(f"\nStandardized columns: {df.columns.tolist()}")        
 
 if __name__ == '__main__':
     import asyncio
