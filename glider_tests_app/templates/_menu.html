@@ -3,7 +3,7 @@
 <nav class="w3-bar w3-black">
   {% set root_path = request.app.state.config.ROOT_PATH if request.app.state.config is defined and request.app.state.config.ROOT_PATH else '' %}
   {% if root_path %}
-  <a href="{{ root_path }}" class="w3-button w3-round-large"><i class="fa fa-home"></i> Home</a>
+  <a href="{{ root_path }}" class="w3-button w3-round-large"><i class="fa fa-home"></i></a>
   {% endif %}
   <a href="{{ url_for('index_route') }}" class="w3-button w3-round-large">Overview</a>
   <a href="{{ url_for('evaluations', org='all') }}" class="w3-button w3-round-large">All</a>
