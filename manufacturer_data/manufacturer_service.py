@@ -9,7 +9,7 @@ from typing import Dict, Optional
 import pandas as pd
 from sqlalchemy import create_engine, text
 from glider_tests_app.db import check_specs_freshness, get_specs_for_model, save_normalized_specs, save_raw_specs, check_open_items
-from manufacturer_data.specs_loader import OzoneSpecsLoader, AdvanceSpecsLoader, NiviukSpecsLoader
+from manufacturer_data.specs_loader import OzoneSpecsLoader, AdvanceSpecsLoader, NiviukSpecsLoader, SkywalkSpecsLoader
 
 import logging
 logger = logging.getLogger(__name__)
@@ -22,7 +22,8 @@ DB_NAME = './glider_tests.db'
 MANUFACTURER_ORG_MAP = {
     'Ozone': 'air-turquoise',
     'Advance': 'air-turquoise',
-    'Niviuk': 'air-turquoise'
+    'Niviuk': 'air-turquoise',
+    'Skywalk': 'dhv',
 }
 
 # Manufacturer name variations in the database
@@ -30,6 +31,7 @@ MANUFACTURER_VARIANTS = {
     'Ozone': ['ozone', 'ozone gliders', 'ozone gliders ltd', 'ozone power ltd'],
     'Advance': ['advance', 'advance thun ag', 'advance thun'],
     'Niviuk': ['niviuk', 'niviuk gliders', 'niviuk gliders / air games s.l.', 'air games'],
+    'Skywalk': ['skywalk'],
 }
 
 def normalize_manufacturer_name(item_name: str) -> Optional[str]:
@@ -62,13 +64,24 @@ def extract_model_from_item_name(item_name: str, manufacturer: Optional[str] = N
     Returns:
         Dict with keys: 'manufacturer', 'model', 'size', 'item_name'
     """
-    # Size patterns: XS, S, M, L, XL, XXL or numeric (10-40 range for m²)
-    size_pattern = r'\b(XXS|XS|S|MS|ML|M|L|XL|XXL|[1-4]\d)\b$'
-    
+    # Unified size pattern for all manufacturers
+    # - Letter sizes: XXS, XS, S, MS, ML, M, L, XL, XXL
+    # - Area-based: 10-49 m²
+    # - Weight-based solo: 60-99, 100-199 kg
+    # - Weight-based tandem: 200-299 kg
+    # - Optional "+" suffix on numeric sizes
+    #size_pattern = r'\b(XXS|XS|S|MS|ML|M|L|XL|XXL|[1-4]\d\+?|[6-9]\d\+?|1\d{2}\+?|2\d{2}\+?)\b$'
+    # Unified size pattern - matches size followed by end of string or parenthetical text
+    size_pattern = r'\b(XXS|XS|S|MS|ML|M|L|XL|XXL|[1-4]\d\+?|[6-9]\d\+?|1\d{2}\+?|2\d{2}\+?)(?=\s*\(|$)'    
+
     # Try to extract size (last token)
     size_match = re.search(size_pattern, item_name, re.IGNORECASE)
     size = size_match.group(1) if size_match else None
     
+    # Remove the "+" suffix if present (e.g., "105+" -> "105")
+    if size and size.endswith('+'):
+        size = size[:-1]
+
     # Remove size from item_name to get manufacturer + model
     if size:
         base_name = item_name[:size_match.start()].strip()
@@ -129,11 +142,9 @@ async def get_all_wings_for_manufacturer(manufacturer: str) -> pd.DataFrame:
     query = f"""
         SELECT DISTINCT org, item_name, report_class
         FROM (
-            SELECT :org as [org], item_name, report_class FROM dhv_reports
-            WHERE :org = 'dhv'  -- AND model is null AND size is null
+            SELECT 'dhv' [org], item_name, report_class FROM dhv_reports
             UNION ALL
-            SELECT :org as [org], item_name, report_class FROM air_turquoise_reports
-            WHERE :org = 'air-turquoise' -- AND model is null AND size is null
+            SELECT 'air-turquoise' [org], item_name, report_class FROM air_turquoise_reports
         )
         WHERE {variant_conditions} 
         ORDER BY item_name
@@ -174,6 +185,8 @@ async def get_models_for_manufacturer(manufacturer: str) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame(columns=['manufacturer', 'model', 'size_count', 'sizes', 'example_item_name'])
     
+    #df['model'] = df['model'].str.lower()
+
     # Group by model to get size variations
     grouped = df.groupby(['org','manufacturer', 'model']).agg({
         'size': ['count', lambda x: ', '.join(sorted(filter(None, set(x))))],
@@ -205,7 +218,7 @@ async def link_reports_to_specs(manufacturer: str = None):
 
 
 
-async def load_specs(manufacturer: str, force_refresh: bool = False) -> pd.DataFrame:
+async def load_specs(manufacturer: str, force_refresh: bool = False, testing_only: bool = False) -> pd.DataFrame:
     """
     Load technical specifications for all models of a given manufacturer.
     
@@ -219,6 +232,10 @@ async def load_specs(manufacturer: str, force_refresh: bool = False) -> pd.DataF
     if models_df.empty:
         logger.info("No models to be processed.")
         return pd.DataFrame()
+    
+    if testing_only:
+        logger.info("\n" + models_df[['manufacturer', 'model', 'sizes']].to_markdown())
+        return models_df
 
     # Initialize loader based on manufacturer
     loader = None
@@ -228,6 +245,8 @@ async def load_specs(manufacturer: str, force_refresh: bool = False) -> pd.DataF
         loader = AdvanceSpecsLoader(headless=True)
     if manufacturer == 'Niviuk':    
         loader = NiviukSpecsLoader(headless=True)
+    if manufacturer == 'Skywalk':
+        loader = SkywalkSpecsLoader(headless=True)
 
     if loader is None:
         raise ValueError(f"No loader available for manufacturer: {manufacturer}")
@@ -307,7 +326,7 @@ async def get_models():
     """Example: Load all Ozone wing data from database"""
     print("\n=== Getting all Ozone wings from database ===")
 
-    for manufacturer in ['Ozone','Advance', 'Niviuk']:    
+    for manufacturer in ['Ozone','Advance', 'Niviuk','Skywalk']:    
         # Get all wings with sizes
         #wings = await get_all_wings_for_manufacturer(manufacturer)
         #print(f"\nTotal wings found: {len(wings)}")
@@ -322,12 +341,12 @@ async def get_models():
 
 async def main():
     """Scrape manufacturer data"""
-    manufacturer = 'Niviuk'
-    specs_df = await load_specs(manufacturer, force_refresh=True)
+    manufacturer = 'Skywalk'
+    specs_df = await load_specs(manufacturer, force_refresh=True, testing_only=True)
     
     if not specs_df.empty:
         print("\n\n=== Sample of scraped data ===")
-        print(specs_df.head(10))
+        print(specs_df.head(20))
         print("\n\nColumns:", specs_df.columns.tolist())
 
 
@@ -343,5 +362,5 @@ async def check_items():
 if __name__ == '__main__':
     asyncio.run(main())
 
-    df = asyncio.run(check_items())
-    print(df)
+    #df = asyncio.run(check_items())
+    #print(df)

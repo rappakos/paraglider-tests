@@ -478,7 +478,8 @@ class SkywalkSpecsLoader(BaseGliderDataLoader):
             slug = slug[:last_dash_idx] + slug[last_dash_idx+1:]
         
         overrides = {
-            # Add Skywalk-specific overrides here as needed
+            'cayenne6': 'not-found', 
+            'arak air': 'not-found',
         }
         
         return overrides.get(slug, slug)
