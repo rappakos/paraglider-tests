@@ -44,10 +44,10 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-2) Copy `.env` from `template.env` if present and edit values such as `PORT` :
+2) Create a `.env` file if needed (currently all defaults work for local development):
 
 ```powershell
-copy template.env .env
+# Optional: create .env for custom configuration
 notepad .env
 ```
 
@@ -64,10 +64,8 @@ uvicorn main:app --reload --host 127.0.0.1 --port 3978
 - API docs (Swagger): `http://127.0.0.1:3978/docs`
 
 Notes:
-- Database setup is intentionally skipped here. If you don't have a DB file, create or copy one next to the repository root (file name `glider_tests.db`) in `.env`.
-- If you still want to run the legacy aiohttp app while migrating, run `python main.py` instead.
-- Legacy aiohttp entrypoint removed; use the FastAPI server (`main.py`) with `uvicorn` instead.
-- For scrapers that use Selenium, ensure Chrome is installed; `webdriver-manager` will manage the ChromeDriver.
+- Database setup is intentionally skipped here. The app expects an existing `glider_tests.db` file in the repository root.
+- The app uses Playwright for web scraping. Playwright will download necessary browser binaries automatically on first use.
 
 ### Run on Android
 
