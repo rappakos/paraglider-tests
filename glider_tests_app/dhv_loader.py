@@ -92,8 +92,7 @@ async def extract_data(item_name:str, report_link:str):
         params['weight_max'] = w_max_txt[w_max_txt.find("(")+1:w_max_txt.find("kg)")]  
         tp =  soup.find("td",{"class":"label"},string= "Test pilots")
         #print(tp)
-        if tp:
-            params['testpilots'] = ", " .join([t.text.strip() for t in tp.find_parent().findAll("td",{"class":"data"})])
+        params['testpilots'] = ", ".join([t.text.strip() for t in tp.find_parent().findAll("td",{"class":"data"})]) if tp else None
         acc =  soup.find("td",{"class":"label"},string= "Accelerator")
         if acc:
              params['accelerator'] = " " .join([t.text.strip() for t in acc.find_parent().findAll("td",{"class":"data"})])
