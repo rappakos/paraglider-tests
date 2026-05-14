@@ -86,16 +86,16 @@ async def extract_data(item_name:str, report_link:str):
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
         #print(soup.prettify)
-        it_name,_,w_min_txt,w_max_txt = [t.text.strip() for t in soup.findAll("td",{"class":"recordcaption"})]
-        assert(it_name==item_name)
-        params['weight_min'] = w_min_txt[w_min_txt.find("(")+1:w_min_txt.find("kg)")]
-        params['weight_max'] = w_max_txt[w_max_txt.find("(")+1:w_max_txt.find("kg)")]  
+        import re
+        caption_cells = [t.text.strip() for t in soup.findAll("td",{"class":"recordcaption"})]
+        weight_cells = [t for t in caption_cells if re.search(r'\(\d+kg\)', t)]
+        params['weight_min'] = re.search(r'\((\d+)kg\)', weight_cells[0]).group(1)
+        params['weight_max'] = re.search(r'\((\d+)kg\)', weight_cells[1]).group(1)
         tp =  soup.find("td",{"class":"label"},string= "Test pilots")
         #print(tp)
         params['testpilots'] = ", ".join([t.text.strip() for t in tp.find_parent().findAll("td",{"class":"data"})]) if tp else None
         acc =  soup.find("td",{"class":"label"},string= "Accelerator")
-        if acc:
-             params['accelerator'] = " " .join([t.text.strip() for t in acc.find_parent().findAll("td",{"class":"data"})])
+        params['accelerator'] = " ".join([t.text.strip() for t in acc.find_parent().findAll("td",{"class":"data"})]) if acc else 'No'
 
         rows=[]
         first_test =  soup.find("td",{"class":"dashed_grey"},string= "Inflation/take-off").find_parent()
@@ -118,7 +118,7 @@ async def extract_data(item_name:str, report_link:str):
     except requests.exceptions.HTTPError as err:
         print(err)
 
-    if len(params) in [4, 5] and len(evaluations) in [27,28]:
+    if len(params) == 5 and len(evaluations) in [27,28]:
         return params, pd.DataFrame(evaluations)
     else:
         print('something is missing', item_name)
