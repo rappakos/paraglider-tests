@@ -289,16 +289,20 @@ async def save_parameters(org:str, params):
         async with aiosqlite.connect(DB_NAME) as db:
             #print(params)
             res = await db.execute_insert("""
-                                INSERT OR IGNORE INTO dhv_parameters ( 
+                                INSERT INTO dhv_parameters ( 
                                         item_name ,
                                         testpilots ,
                                         weight_min ,
                                         weight_max)
-                                SELECT 
+                                VALUES (
                                         :item_name ,
-                                        :testpilots ,
+                                        COALESCE(:testpilots, ''),
                                         :weight_min ,
-                                        :weight_max                            
+                                        :weight_max)
+                                ON CONFLICT(item_name) DO UPDATE SET
+                                        testpilots = COALESCE(:testpilots, testpilots),
+                                        weight_min = :weight_min,
+                                        weight_max = :weight_max                          
                             """, params)
                 #print(res)
             await db.commit()               
