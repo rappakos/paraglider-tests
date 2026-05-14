@@ -78,6 +78,39 @@ async def get_stats():
                     """), db, params=param)
         return df
 
+async def get_recent_item_names(org:str, weight:int=119, limit:int=5) -> list:
+        engine = create_engine(f'sqlite:///{DB_NAME}')
+        with engine.connect() as db:
+            params = {'limit': limit, 'w': weight}
+            if org == 'dhv':
+                df = read_sql_query(text("""
+                    SELECT r.item_name FROM dhv_reports r
+                    JOIN dhv_parameters p ON p.item_name = r.item_name
+                    WHERE p.weight_min <= :w AND p.weight_max >= :w
+                    ORDER BY r.report_date DESC LIMIT :limit
+                """), db, params=params)
+            elif org == 'air-turquoise':
+                df = read_sql_query(text("""
+                    SELECT r.item_name FROM air_turquoise_reports r
+                    JOIN air_turquoise_parameters p ON p.item_name = r.item_name
+                    WHERE p.weight_min <= :w AND p.weight_max >= :w
+                    ORDER BY r.report_date DESC LIMIT :limit
+                """), db, params=params)
+            elif org == 'all':
+                df = read_sql_query(text("""
+                    SELECT r.item_name, r.report_date FROM dhv_reports r
+                    JOIN dhv_parameters p ON p.item_name = r.item_name
+                    WHERE p.weight_min <= :w AND p.weight_max >= :w
+                    UNION ALL
+                    SELECT r.item_name, r.report_date FROM air_turquoise_reports r
+                    JOIN air_turquoise_parameters p ON p.item_name = r.item_name
+                    WHERE p.weight_min <= :w AND p.weight_max >= :w
+                    ORDER BY report_date DESC LIMIT :limit
+                """), db, params=params)
+            else:
+                return []
+        return df['item_name'].tolist()
+
 async def get_reports(org:str):
         import pandas as pd
         if org not in ['dhv','air-turquoise']:

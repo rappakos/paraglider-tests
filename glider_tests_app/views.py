@@ -123,6 +123,10 @@ async def evaluations(org: str, request: Request) -> HTMLResponse:
     classification = request.query_params.get('classification', '')
 
     if org in ORGS:
+        if not weight and not item_name:
+            recent = await db.get_recent_item_names(org, weight=119, limit=5)
+            item_name = ','.join(recent)
+            weight = '119'
         evaluations = await db.get_evaluations(org, item_name, weight, classification)
 
         pivoted = evaluations.set_index(['item_name','report_class','weight_min','weight_max','area_projected_m2','test_name']).unstack('test_name')
