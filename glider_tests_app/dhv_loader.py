@@ -119,7 +119,7 @@ async def extract_data(item_name:str, report_link:str):
     except requests.exceptions.HTTPError as err:
         print(err)
 
-    if len(params)==5 and len(evaluations) in [27,28]:
+    if len(params) in [4, 5] and len(evaluations) in [27,28]:
         return params, pd.DataFrame(evaluations)
     else:
         print('something is missing', item_name)
