@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 
 from config import DefaultConfig
 
-from glider_tests_app.routes import router
+from glider_tests_app.routes import router, api_router
 from glider_tests_app.middlewares import setup_middlewares
 
 CONFIG = DefaultConfig()
@@ -25,6 +25,7 @@ except Exception:
 
 # Include application routes
 app.include_router(router)
+app.include_router(api_router)
 
 # Apply project middlewares (CORS, error handlers, etc.)
 setup_middlewares(app)
