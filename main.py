@@ -23,9 +23,9 @@ except Exception:
     # Directory may be missing in some setups; swallow to avoid startup crash
     pass
 
-# Include application routes
-app.include_router(router)
+# Include application routes (api_router first to avoid /{org} catch-all shadowing /api/*)
 app.include_router(api_router)
+app.include_router(router)
 
 # Apply project middlewares (CORS, error handlers, etc.)
 setup_middlewares(app)

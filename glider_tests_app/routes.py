@@ -62,6 +62,6 @@ async def api_search_wings(
         return JSONResponse(content={"results": [], "query": {"q": q, "weight": weight, "classification": classification}})
 
     return JSONResponse(content={
-        "results": results.to_dict('records'),
+        "results": results.fillna("").to_dict('records'),
         "query": {"q": q, "weight": weight, "classification": classification}
     })
