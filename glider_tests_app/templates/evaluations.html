@@ -31,7 +31,7 @@
     <table class="w3-table w3-bordered w3-tiny w3-hoverable">
         <tr>
             <th class="first-col">Name<br />
-            <input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" />
+            <input id="item_name" name="item_name" type="text" value="{{filter.item_name}}" /><button type="button" onclick="document.getElementById('item_name').value=''" title="Clear">&times;</button>
             <span  style="font-size: 0.8em; color: #666;">Hint: use comma separated values, e.g. "Ikuma 3, Artik 7"</span>
             </th>
             {% for i in range(evaluations.index|length) %}
