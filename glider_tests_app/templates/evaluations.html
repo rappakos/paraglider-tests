@@ -35,20 +35,21 @@
             <span  style="font-size: 0.8em; color: #666;">Hint: use comma separated values, e.g. "Ikuma 3, Artik 7"</span>
             </th>
             {% for i in range(evaluations.index|length) %}
-                <th>{{evaluations.index[i][0]}}</th>
+                <td class="w3-center">{{evaluations.index[i][0]}}</td>
             {% endfor %}
         </tr>
         <tr>
             <th class="first-col">Weight range (kg)<br /></th>
             {% for i in range(evaluations.index|length) %}
-                <th>{{evaluations.index[i][2]|int}}-{{evaluations.index[i][3]|int}}</th>
+                <td class="w3-center">{{evaluations.index[i][2]|int}}-{{evaluations.index[i][3]|int}}</td>
             {% endfor %}                
         </tr>
         <tr>
             <th class="first-col">Proj. surface (m²)<br /> 
-                <span  style="font-size: 0.8em; color: #666;">*For certain Ozone, Advance, Niviuk models</span>  </th>
+                <span  style="font-size: 0.8em; color: #666;">*For certain Ozone, Advance, Niviuk models</span> 
+             </th>
             {% for i in range(evaluations.index|length) %}
-                <th>{{ "%.2f"|format(evaluations.index[i][4]) if evaluations.index[i][4] == evaluations.index[i][4] else '' }}</th>
+                <td class="w3-center">{{ "%.2f"|format(evaluations.index[i][4]) if evaluations.index[i][4] == evaluations.index[i][4] else '' }}</td>
             {% endfor %}
         
         </tr>        
@@ -60,19 +61,20 @@
             </div>
         </th>
             {% for i in range(evaluations.index|length) %}
-                <th>
+                <td class="w3-center">
                     {% if filter.weight and evaluations.index[i][4] and evaluations.index[i][4] == evaluations.index[i][4] and evaluations.index[i][4] > 0 %}
                         {{ "%.2f"|format(filter.weight|float / evaluations.index[i][4]) }}
                     {% else %}
                         
                     {% endif %}
-                </th>
+                </td>
             {% endfor %}
         </tr>
             <th class="first-col">Class<br />
-            <input id="classification" name="classification" type="text" value="{{filter.classification}}" size="2" /></th>
+                <input id="classification" name="classification" type="text" value="{{filter.classification}}" size="2" />
+            </th>
             {% for i in range(evaluations.index|length) %}
-                <th>{{evaluations.index[i][1]}}</th>
+                <td class="w3-center">{{evaluations.index[i][1]}}</td>
             {% endfor %}
         </tr>    
         {% for j in range(evaluations.columns|length) %}
