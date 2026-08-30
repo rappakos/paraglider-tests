@@ -4,6 +4,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime
 from pypdf import PdfReader
+from shutil import which
 
 
 
@@ -181,15 +182,26 @@ async def extract_param_data(item_name:str, filename:str):
 
 async def extract_ocr_data(item_name:str, filename:str):
     import os
-    from PIL import Image
     from pdf2image import convert_from_bytes
+    from pdf2image.exceptions import PDFInfoNotInstalledError
     import pytesseract
 
-    pytesseract.pytesseract.tesseract_cmd = os.getenv('tesseract_cmd')
-    #print(pytesseract.pytesseract.tesseract_cmd)
+    tesseract_cmd = os.getenv('tesseract_cmd')
+    if tesseract_cmd:
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+    elif which('tesseract') is None:
+        raise RuntimeError(
+            'Tesseract OCR executable not found. Install tesseract-ocr or set tesseract_cmd in .env.'
+        )
 
     textrows, failed = [], False
-    pdf_file = convert_from_bytes(open(filename, 'rb').read())
+    try:
+        with open(filename, 'rb') as pdf_handle:
+            pdf_file = convert_from_bytes(pdf_handle.read())
+    except PDFInfoNotInstalledError as exc:
+        raise RuntimeError(
+            'Poppler tools not found. Install poppler-utils before running OCR extraction.'
+        ) from exc
     for (i,page) in enumerate(pdf_file) :
         try:
             text = pytesseract.image_to_string(page,config='--psm 4')
@@ -206,7 +218,7 @@ async def extract_ocr_data(item_name:str, filename:str):
 
         except Exception as x:
             print(f"page {i} failed {x}")
-            failed = False
+            failed = True
             continue
 
     print(textrows)

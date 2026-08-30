@@ -24,11 +24,25 @@ The DHV test reports are available as HTML, which can be extracted using standar
 
 ![Filter and compare paragliders](./screenshots/filter_results.png)
 
-### Tesseract 
+### OCR for Air Turquoise PDFs
 
-Some PDF files need to be processed with an OCR tool.
+Some Air Turquoise PDF files have broken text extraction and fall back to OCR.
 
-Add `tesseract_cmd` with path to the exe to a `.env` file.
+On Linux, install both Tesseract and Poppler first:
+
+```bash
+sudo apt install tesseract-ocr poppler-utils
+```
+
+`pytesseract` will use `tesseract` from your `PATH` by default, so a `.env` entry is usually not needed on Linux.
+
+If autodiscovery fails, add this to `.env`:
+
+```dotenv
+tesseract_cmd=/usr/bin/tesseract
+```
+
+On Windows, keep using the full `tesseract.exe` path in `.env`.
 
 
 ## Running locally (FastAPI)
@@ -37,6 +51,17 @@ The project has been migrated to FastAPI. The instructions below intentionally s
 
 1) Create and activate a virtual environment, then install dependencies:
 
+Linux / macOS:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Windows PowerShell:
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
@@ -44,7 +69,15 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-2) Create a `.env` file if needed (currently all defaults work for local development):
+2) Create a `.env` file if needed:
+
+Linux / macOS:
+
+```bash
+touch .env
+```
+
+Windows PowerShell:
 
 ```powershell
 # Optional: create .env for custom configuration
@@ -66,6 +99,7 @@ uvicorn main:app --reload --host 127.0.0.1 --port 3978
 Notes:
 - Database setup is intentionally skipped here. The app expects an existing `glider_tests.db` file in the repository root.
 - The app uses Playwright for web scraping. Playwright will download necessary browser binaries automatically on first use.
+- Air Turquoise OCR additionally requires the system packages `tesseract-ocr` and `poppler-utils` on Debian-based Linux systems such as Linux Mint.
 
 ### Run on Android
 

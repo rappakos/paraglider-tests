@@ -17,6 +17,7 @@ scipy
 pypdf
 Pillow
 pdf2image
+pytesseract
 pytest
 httpx
 playwright>=1.40.0
