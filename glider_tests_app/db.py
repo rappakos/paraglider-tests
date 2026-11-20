@@ -9,6 +9,7 @@ from typing import Optional, Dict, List, Tuple
 DB_NAME = './glider_tests.db'
 INIT_SCRIPT = './glider_tests_app/init_db.sql'
 START_DATE = '2020-01-01' # do not load earlier tests
+AIR_TURQUOISE_PDF_CUTOFF_DATE = "2026-09-01"
 
 
 async def setup_db(app):
@@ -395,11 +396,12 @@ async def get_open_reports(org:str):
 
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
-            param = {}
+            param = {"cutoff_date": AIR_TURQUOISE_PDF_CUTOFF_DATE}
             df  = pd.read_sql_query(text("""
                         SELECT [item_name], [report_link]
                         FROM air_turquoise_reports r 
                         WHERE [download_link] is null 
+                            and [report_date] >= :cutoff_date
                             and [item_name] not like '%sting%rs%'
                         ORDER BY [report_date] DESC
                         LIMIT 20 -- test
@@ -413,11 +415,12 @@ async def get_download_links(org:str):
 
         engine = create_engine(f'sqlite:///{DB_NAME}')
         with engine.connect() as db:
-            param = {}
+            param = {"cutoff_date": AIR_TURQUOISE_PDF_CUTOFF_DATE}
             df  = pd.read_sql_query(text("""
                         SELECT r.[item_name], r.[download_link]
                         FROM air_turquoise_reports r 
                         WHERE r.[download_link] is not null 
+                            and r.[report_date] >= :cutoff_date
                         ORDER BY r.[report_date] DESC
                         LIMIT 1000 -- test
                     """), db, params=param)

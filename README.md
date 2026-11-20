@@ -10,6 +10,8 @@ Tool to easily get new certification data and compare gliders.
 ###  Air Turquoise
 
  Air Turquoise provides data over PDF links, most of which can be processed relatively easily. Some files have broken text content that need some additional tricks.
+ 
+ For the UI actions **Get download links** and **Get PDF files**, only Air Turquoise reports with `report_date >= 2026-09-01` are considered.
 
 ### DHV
 

@@ -137,18 +137,26 @@ async def get_download_link(link:str):
         soup = BeautifulSoup(resp.text, 'html.parser')
         #print(soup.prettify)
         table = soup.find("table")
+        if table is None:
+            print(f"no table found for {url}")
+            return None
         a = None
         a_de = None
         for tr in table.find("tbody").findAll('tr'):
             #print(tr)
             td = tr.find('td') # first
+            if td is None:
+                continue
             alink = td.find('a')
+            if alink is None:
+                continue
+            link_text = alink.get_text(" ", strip=True).lower()
             #print( alink.text if alink else '-' )
-            if alink and alink.text.strip()=='Flight report':
+            if 'flight report trimmer closed' in link_text:
                 a = alink
-            if alink and alink.text.strip()=='Flight report trimmer closed':
-                a = alink     
-            if alink and alink.text.strip()=='Flugbericht':
+            elif link_text.startswith('flight report'):
+                a = alink
+            elif link_text.startswith('flugbericht'):
                 a_de = alink     
             if a:
                 break
